@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Society of the Snow — CineReview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #020617; /* Very dark slate/mountain night */
+      --surface: #0f172a; 
+      --card:    #1e293b;
+      --border:  rgba(186, 230, 253, 0.1); /* Ice blue tint */
+      --snow:    #f8fafc; /* Blinding white */
+      --ice:     #bae6fd; /* Glacial blue */
+      --sun:     #ea580c; /* High altitude harsh sun/orange */
+      --text:    #e2e8f0;
+      --muted:   #94a3b8;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ── Custom Cursor ── */
+    #cur {
+      width: 10px; height: 10px;
+      background: var(--snow);
+      position: fixed; pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%);
+      border-radius: 50%;
+      transition: width .2s, height .2s, background .2s;
+      mix-blend-mode: difference;
+    }
+    #cur.h { 
+      width: 36px; height: 36px; background: transparent; 
+      border: 2px solid var(--sun); mix-blend-mode: normal;
+      box-shadow: 0 0 10px rgba(234, 88, 12, 0.4);
+    }
+
+    /* ── Subtle Vignette & Grain ── */
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9000;
+      background: radial-gradient(circle, transparent 50%, rgba(2, 6, 23, 0.8) 100%),
+                  url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; width: 100%; z-index: 200;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 3rem;
+      background: linear-gradient(to bottom, rgba(2, 6, 23, 0.9) 0%, rgba(2, 6, 23, 0) 100%);
+    }
+    .nav-logo {
+      font-family: 'Montserrat', sans-serif; font-weight: 800;
+      font-size: 1.4rem; color: var(--snow); text-decoration: none;
+      letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .nav-logo span { font-weight: 300; color: var(--ice); }
+    .nav-back {
+      font-family: 'Montserrat', sans-serif; font-size: .7rem; letter-spacing: .15em; 
+      text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color .3s;
+      font-weight: 600;
+    }
+    .nav-back:hover { color: var(--snow); }
+
+    /* ══════════════════════════════════
+       HERO — The Blizzard
+    ══════════════════════════════════ */
+    .hero {
+      min-height: 100vh; position: relative;
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 0 3rem; overflow: hidden; text-align: center;
+      align-items: center;
+    }
+
+    #blizzardCanvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+    
+    .hero-grad {
+      position: absolute; inset: 0; z-index: 1;
+      background: radial-gradient(ellipse at 50% 50%, transparent 20%, var(--bg) 90%),
+                  linear-gradient(to top, var(--bg) 0%, transparent 30%);
+    }
+
+    .hero-content { position: relative; z-index: 2; max-width: 900px; margin-top: 5rem; }
+    
+    .eyebrow {
+      font-family: 'Montserrat', sans-serif; font-size: .75rem; letter-spacing: .4em; 
+      text-transform: uppercase; color: var(--ice); margin-bottom: 1.5rem; display: block;
+      font-weight: 600;
+    }
+
+    h1.hero-title {
+      font-family: 'Montserrat', sans-serif; font-size: clamp(3rem, 7vw, 6rem);
+      font-weight: 800; line-height: 1; letter-spacing: -0.03em; margin-bottom: 0.5rem;
+      color: var(--snow); text-transform: uppercase;
+    }
+    h1.hero-title em { font-weight: 300; font-style: italic; color: var(--muted); }
+
+    .hero-subtitle {
+      font-size: .95rem; letter-spacing: .2em; text-transform: uppercase; 
+      color: var(--muted); margin-bottom: 3rem; font-weight: 400;
+    }
+
+    .score-strip { 
+      display: flex; align-items: center; justify-content: center; gap: 3rem; 
+      margin-bottom: 3rem; padding-top: 2rem; border-top: 1px solid rgba(186, 230, 253, 0.1);
+    }
+    .score-big { display: flex; align-items: baseline; gap: .3rem; }
+    .score-big .n { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 4.5rem; color: var(--snow); line-height: 1; }
+    .score-big .d { font-family: 'Montserrat', sans-serif; color: var(--muted); font-size: 1rem; font-weight: 600;}
+    .stars { display:flex; gap:5px; }
+    .star  { font-size: 1.2rem; color: var(--ice); }
+
+    .meta-pills { display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; }
+    .pill {
+      font-family: 'Montserrat', sans-serif; padding: .4rem 1.2rem; border-radius: 2px;
+      font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; font-weight: 600;
+      border: 1px solid var(--border); color: var(--muted);
+      background: rgba(255,255,255,0.02); backdrop-filter: blur(5px);
+    }
+    .pill.red { border-color: rgba(234, 88, 12, 0.4); color: var(--sun); }
+
+    /* ══ STATS BAND ══ */
+    .stats-band {
+      background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      padding: 4rem 3rem; position: relative; z-index: 2;
+    }
+    .stats-inner {
+      max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(4,1fr); gap: 2rem; text-align: center;
+    }
+    .sv { font-family:'Montserrat',sans-serif; font-weight: 800; font-size:3.5rem; color:var(--snow); display:block; line-height:1; margin-bottom: 0.5rem;}
+    .sl { font-family: 'Montserrat', sans-serif; font-size:.65rem; letter-spacing:.15em; text-transform:uppercase; color:var(--ice); display:block; font-weight: 600;}
+
+    /* ══ MAIN ══ */
+    main { position: relative; z-index: 2; }
+    section.cs { max-width: 1200px; margin: 0 auto; padding: 6rem 3rem; }
+
+    .sec-lbl {
+      font-family: 'Montserrat', sans-serif; font-size: .7rem; letter-spacing: .2em; text-transform: uppercase; font-weight: 700;
+      color: var(--ice); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;
+    }
+    .sec-lbl::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    h2.bt {
+      font-family: 'Montserrat', sans-serif; font-size: clamp(2.2rem,4vw,3.2rem);
+      font-weight: 700; line-height: 1.1; color: var(--snow); margin-bottom: 2.5rem; letter-spacing: -0.02em;
+    }
+    h2.bt em { color: var(--sun); font-style: normal; font-weight: 300;}
+
+    hr.div { max-width:1200px; margin:0 auto; border:none; border-top:1px solid var(--border); opacity: 0.5; }
+
+    /* ══ SYNOPSIS ══ */
+    .syn-grid { display:grid; grid-template-columns:1fr 380px; gap:5rem; align-items:start; }
+
+    .body-text { font-size: 1.15rem; line-height: 1.9; color: rgba(226, 232, 240, 0.85); font-weight: 300;}
+    .body-text p + p { margin-top:1.5rem; }
+    .dropcap { float: left; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 4rem; line-height: 0.8; padding-top: 8px; padding-right: 12px; color: var(--snow); }
+
+    /* Poster - Rugged / Glacial */
+    .poster-wrap { position:sticky; top:7rem; }
+    .poster {
+      width:100%; aspect-ratio:2/3; background: linear-gradient(to bottom, #cbd5e1 0%, #0f172a 100%); 
+      border: 1px solid var(--border); position:relative; overflow:hidden; 
+      display:flex; flex-direction: column; align-items:center; justify-content:center;
+    }
+    .poster::after {
+      content: ''; position: absolute; bottom: -50px; right: -50px; width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(234,88,12,0.5), transparent 70%); filter: blur(30px);
+    }
+    .poster-inner { position:relative; z-index:1; text-align:center; padding:1.5rem; }
+    .poster-inner .big { font-family:'Montserrat',sans-serif; font-weight: 800; font-size:2.8rem; color:var(--bg); line-height:1; letter-spacing: -0.05em; text-transform: uppercase;}
+    .poster-inner .big em { color: var(--snow); font-style: normal; }
+    .poster-inner .sm { font-family:'Montserrat',sans-serif; font-size:.65rem; letter-spacing:.2em; text-transform:uppercase; color:var(--bg); margin-top:1rem; display:block; font-weight: 700;}
+
+    .info-table { margin-top:2rem; }
+    .ir { display:flex; justify-content:space-between; align-items:center; padding:.8rem 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+    .ir:last-child { border:none; }
+    .ik { font-family:'Montserrat', sans-serif; font-weight: 600; font-size:.65rem; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); }
+    .iv { font-size:.85rem; color:var(--text); font-weight: 400;}
+
+    /* ══ HIGHLIGHTS ══ */
+    .vl-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; margin-top:2rem; }
+    .vl-card {
+      background:var(--card); border:1px solid var(--border); padding:2rem 1.8rem;
+      position: relative; transition:all .3s; border-radius: 4px;
+    }
+    .vl-card:hover { transform:translateY(-5px); border-color:var(--ice); background: var(--surface); }
+    .vl-icon { font-size:2rem; margin-bottom:1.2rem; display:block; filter: grayscale(1) brightness(1.5); opacity: 0.9;}
+    .vl-title { font-family:'Montserrat',sans-serif; font-weight: 700; font-size:1.1rem; margin-bottom:.8rem; color: var(--snow); text-transform: uppercase; letter-spacing: -0.02em;}
+    .vl-body { font-size:.9rem; color:var(--muted); line-height:1.7; }
+    
+    /* ══ CAST ══ */
+    .cast-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:1.5rem; margin-top:2rem; }
+    .cast-card {
+      background:var(--surface); border:1px solid var(--border); border-radius: 4px; overflow: hidden;
+      transition:all .3s; cursor: none; text-align: center; padding-bottom: 1.2rem;
+    }
+    .cast-card:hover { border-color: var(--snow); transform: translateY(-3px);}
+    .cast-photo {
+      height:200px; display:flex; align-items:center; justify-content:center;
+      background: linear-gradient(to bottom, #334155, #0f172a);
+      font-family:'Montserrat',sans-serif; font-weight: 800; font-size:3rem; color: rgba(255,255,255,0.1);
+      border-bottom: 1px solid var(--border); margin-bottom: 1rem;
+    }
+    .cast-name { font-family:'Inter',sans-serif; font-weight: 600; font-size:.95rem; margin-bottom:.3rem; color: var(--snow); }
+    .cast-role { font-family:'Montserrat',sans-serif; font-weight: 600; font-size:.65rem; color:var(--ice); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* ══ REVIEW ══ */
+    .review-wrap {
+      background:var(--surface); border:1px solid var(--border); padding:4rem; position:relative; overflow:hidden; border-radius: 4px;
+    }
+    .review-wrap::before {
+      content: '72 DÍAS'; position: absolute; top: -1.5rem; right: -1rem; 
+      font-family:'Montserrat',sans-serif; font-weight: 800; font-size: 8rem; color: rgba(255,255,255,0.02); line-height: 1; pointer-events: none;
+    }
+    
+    .review-top { display:flex; align-items:center; gap:2rem; margin-bottom:2.5rem; }
+    .score-ring {
+      width:80px; height:80px; border:3px solid var(--snow); flex-shrink:0;
+      display:flex; align-items:center; justify-content:center; border-radius: 50%;
+      box-shadow: 0 0 15px rgba(255,255,255,0.2);
+    }
+    .score-ring-inner { font-family:'Montserrat',sans-serif; font-weight: 800; font-size:2.2rem; color:var(--snow); }
+    .review-verdict { font-family:'Montserrat',sans-serif; font-weight: 700; font-size:1.6rem; color: var(--snow); letter-spacing: -0.02em;}
+    .review-verdict em { color:var(--sun); font-style: normal; font-weight: 300;}
+    .review-by { font-family:'Montserrat',sans-serif; font-weight: 600; font-size:.7rem; color:var(--muted); margin-top:.5rem; text-transform: uppercase; letter-spacing: .05em; }
+
+    .review-body { font-size:1.1rem; line-height:1.9; color:rgba(226, 232, 240, 0.85); font-weight: 300; }
+    .review-body p + p { margin-top:1.5rem; }
+    .pull {
+      padding:1.5rem 2rem; margin:2.5rem 0; background: rgba(255,255,255,0.03); border-left: 3px solid var(--sun);
+      font-family: 'Inter', sans-serif; font-weight: 500; font-size:1.3rem; color:var(--snow); line-height:1.5;
+    }
+
+    /* ══ COMMENTS ══ */
+    .comments-list { display:flex; flex-direction:column; gap:1.2rem; margin-bottom:4rem; }
+    .cmnt {
+      background:var(--surface); border:1px solid var(--border); padding:1.8rem; border-radius: 4px;
+      transition: border-color .3s;
+    }
+    .cmnt:hover { border-color: rgba(186, 230, 253, 0.3); }
+    .cmnt-hd { display:flex; align-items:center; gap:1rem; margin-bottom:1rem; }
+    .av {
+      width:40px; height:40px; background:var(--card); border: 1px solid var(--border);
+      display:flex; align-items:center; justify-content:center; border-radius: 50%;
+      font-family: 'Montserrat', sans-serif; font-weight: 700; font-size:.9rem; color:var(--snow); flex-shrink:0;
+    }
+    .cmnt-name { font-weight: 600; font-size:.95rem; color:var(--snow); }
+    .cmnt-date { font-family:'Montserrat',sans-serif; font-weight: 600; font-size:.65rem; color:var(--muted); margin-top: 0.2rem; letter-spacing: .05em; text-transform: uppercase;}
+    .cmnt-stars { margin-left:auto; color:var(--ice); font-size:1rem; }
+    .cmnt-body { font-size:.95rem; color:var(--muted); line-height:1.7; }
+
+    /* ══ FORM ══ */
+    .cf { background:var(--surface); border:1px solid var(--border); padding:3rem; border-radius: 4px;}
+    .cf h3 { font-family:'Montserrat',sans-serif; font-weight: 700; font-size:1.4rem; margin-bottom:2rem; color: var(--snow); text-transform: uppercase; letter-spacing: -0.02em;}
+    .cf-row { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+    .cf-grp { display:flex; flex-direction:column; gap:.6rem; }
+    .cf-grp label { font-family:'Montserrat',sans-serif; font-weight: 600; font-size:.65rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ice); }
+    .cf-grp input, .cf-grp textarea {
+      background:var(--bg); border:1px solid var(--border); color:var(--text);
+      padding:1rem 1.2rem; font-family:'Inter',sans-serif; font-size:.9rem; border-radius: 2px;
+      outline:none; transition:all .3s; resize:vertical;
+    }
+    .cf-grp input:focus, .cf-grp textarea:focus { border-color:var(--snow); background: rgba(255,255,255,0.02);}
+    .cf-stars { display:flex; gap:.4rem; margin-top:.2rem; }
+    .cf-star { font-size:1.4rem; cursor:none; color:rgba(255,255,255,0.1); transition:color .2s; }
+    .cf-star.on { color:var(--snow); text-shadow: 0 0 10px rgba(255,255,255,0.5);}
+    .cf-foot { display:flex; justify-content:flex-end; margin-top:2rem; }
+    
+    .btn {
+      display:inline-flex; align-items:center; justify-content: center; padding:.8rem 2rem; 
+      background: var(--snow); color:var(--bg); border: none; border-radius: 2px;
+      font-family:'Montserrat',sans-serif; font-weight: 700; cursor:none; font-size:.8rem; letter-spacing:.05em; 
+      text-transform:uppercase; transition:all .3s;
+    }
+    .btn:hover { background:var(--ice); transform: translateY(-2px); }
+
+    /* ══ TOAST ══ */
+    #toast {
+      position:fixed; bottom:2rem; right:2rem; z-index:500;
+      background:var(--snow); color:var(--bg); font-weight: 600; border-radius: 2px;
+      padding:1rem 2rem; font-size:.85rem; font-family: 'Montserrat', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;
+      transform:translateY(80px); opacity:0;
+      transition:all .4s cubic-bezier(.175, .885, .32, 1.275); pointer-events:none;
+    }
+    #toast.show { transform:translateY(0); opacity:1; }
+
+    /* ══ Animations ══ */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+    .fu { opacity:0; animation:fadeUp 1s ease forwards; }
+    .d1{animation-delay:.15s} .d2{animation-delay:.3s} .d3{animation-delay:.45s} .d4{animation-delay:.6s}
+
+    @media(max-width:900px){
+      nav,.hero,.stats-band{padding-left:1.5rem;padding-right:1.5rem;}
+      section.cs{padding-left:1.5rem;padding-right:1.5rem; padding-top: 4rem; padding-bottom: 4rem;}
+      .syn-grid,.cf-row{grid-template-columns:1fr;}
+      .poster-wrap{position:static;max-width:280px; margin: 0 auto;}
+      .stats-inner,.vl-grid{grid-template-columns:repeat(2,1fr);}
+      h1.hero-title { font-size: 3.5rem; }
+    }
+    @media(max-width:500px){
+      .stats-inner{grid-template-columns:1fr;}
+      .vl-grid{grid-template-columns:1fr;}
+      .score-strip { flex-direction: column; gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="cur"></div>
+
+<nav>
+  <a href="index.html" class="nav-logo">Cine<span>Review</span></a>
+  <a href="index.html" class="nav-back">← Volver al inicio</a>
+</nav>
+
+<section class="hero">
+  <canvas id="blizzardCanvas"></canvas>
+  <div class="hero-grad"></div>
+
+  <div class="hero-content">
+    <span class="eyebrow fu">Supervivencia · Drama · 2023</span>
+    <h1 class="hero-title fu d1">Society of <br><em>the Snow</em></h1>
+    <p class="hero-subtitle fu d2">J.A. Bayona · Netflix / Apaches Entertainment</p>
+    
+    <div class="score-strip fu d3">
+      <div class="score-big">
+        <span class="n">8.1</span><span class="d">/10</span>
+      </div>
+      <div>
+        <div class="stars">★★★★<span style="color: rgba(255,255,255,0.2);">★</span></div>
+        <div style="font-family:'Montserrat',sans-serif; font-size:.65rem; color:var(--muted); margin-top:.4rem; letter-spacing:.1em; text-transform:uppercase; font-weight:600;">Puntuación Editorial</div>
+      </div>
+    </div>
+    
+    <div class="meta-pills fu d4">
+      <span class="pill">144 MIN</span>
+      <span class="pill">2 NOMS. OSCAR</span>
+      <span class="pill">12 PREMIOS GOYA</span>
+      <span class="pill red">BASADA EN HECHOS REALES</span>
+    </div>
+  </div>
+</section>
+
+<div class="stats-band">
+  <div class="stats-inner">
+    <div><span class="sv" data-t="72">0</span><span class="sl">Días en la Montaña</span></div>
+    <div><span class="sv" data-t="90">0</span><span class="sl">% Rotten Tomatoes</span></div>
+    <div><span class="sv" data-t="16">0</span><span class="sl">Sobrevivientes</span></div>
+    <div><span class="sv" data-t="144">0</span><span class="sl">Minutos (Duración)</span></div>
+  </div>
+</div>
+
+<main>
+
+  <section class="cs">
+    <div class="syn-grid">
+      <div>
+        <div class="sec-lbl">El Accidente</div>
+        <h2 class="bt">La inmensidad y el <em>silencio absoluto.</em></h2>
+        <div class="body-text">
+          <p><span class="dropcap">E</span>l 13 de octubre de 1972, el vuelo 571 de la Fuerza Aérea Uruguaya, fletado para llevar a un equipo de rugby a Chile, se estrella trágicamente en el corazón de la cordillera de los Andes. Solo 29 de sus 45 pasajeros sobreviven al impacto inicial.</p>
+          <p>Atrapados en uno de los entornos más hostiles e inaccesibles del planeta, sometidos a temperaturas bajo cero, tormentas de nieve, avalanchas y una inanición extrema, los sobrevivientes se ven obligados a tomar medidas desesperadas e impensables para mantenerse con vida. Sin esperanzas de rescate tras escuchar en una radio que la búsqueda ha sido cancelada, la supervivencia dependerá únicamente de ellos mismos.</p>
+          <p>A diferencia de adaptaciones anteriores (como <em>¡Viven!</em> de 1993), el director J.A. Bayona y el autor Pablo Vierci le otorgan la voz narrativa a Numa Turcatti, uno de los jóvenes que no sobrevivió, logrando que la película no sea solo una hazaña de triunfo, sino un réquiem profundamente humano y respetuoso por los 29 que no volvieron a casa.</p>
+        </div>
+      </div>
+
+      <div class="poster-wrap">
+        <div class="poster">
+          <div class="poster-inner">
+            <span class="big">SOCIETY</span><br>
+            <span class="big"><em>OF THE</em></span><br>
+            <span class="big">SNOW</span>
+            <span class="sm">J.A. Bayona</span>
+          </div>
+        </div>
+        <div class="info-table">
+          <div class="ir"><span class="ik">Director</span><span class="iv">J.A. Bayona</span></div>
+          <div class="ir"><span class="ik">Guión</span><span class="iv">J.A. Bayona, B. Vilaplana</span></div>
+          <div class="ir"><span class="ik">Libro Original</span><span class="iv">Pablo Vierci</span></div>
+          <div class="ir"><span class="ik">Fotografía</span><span class="iv">Pedro Luque</span></div>
+          <div class="ir"><span class="ik">Música</span><span class="iv">Michael Giacchino</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div"/>
+
+  <section class="cs" style="padding-top:5rem;padding-bottom:5rem;">
+    <div class="sec-lbl">Detrás de Cámaras</div>
+    <h2 class="bt">Un rodaje al <em>límite</em></h2>
+    <div class="vl-grid">
+      <div class="vl-card">
+        <span class="vl-icon">🏔️</span>
+        <div class="vl-title">Realismo Brutal</div>
+        <div class="vl-body">La película fue rodada en condiciones extremas en Sierra Nevada (España) y en los Andes reales. Bayona sometió a los actores a dietas estrictas controladas médicamente para reflejar el desgaste físico real de los 72 días.</div>
+      </div>
+      <div class="vl-card">
+        <span class="vl-icon">🗣️</span>
+        <div class="vl-title">La Voz de Numa</div>
+        <div class="vl-body">La decisión de usar a Numa Turcatti como narrador cambia el paradigma. Nos recuerda que "la sociedad de la nieve" se construyó gracias a los que dieron su cuerpo para que otros pudieran caminar fuera de la montaña.</div>
+      </div>
+      <div class="vl-card">
+        <span class="vl-icon">🎼</span>
+        <div class="vl-title">Música que congela</div>
+        <div class="vl-body">La banda sonora de Michael Giacchino huye del heroísmo épico tradicional. Utiliza cuerdas tensas, coros espectrales y sonidos orgánicos para reflejar el pavor de la montaña y el latido del corazón humano luchando por no apagarse.</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div"/>
+
+  <section class="cs" style="padding-top:5rem;padding-bottom:5rem;">
+    <div class="sec-lbl">El Reparto</div>
+    <h2 class="bt">Rostros <em>Desconocidos</em>, Almas Gigantes</h2>
+    <div class="cast-grid" id="castGrid"></div>
+  </section>
+
+  <hr class="div"/>
+
+  <section class="cs" style="padding-top:5rem;padding-bottom:5rem;">
+    <div class="sec-lbl">Veredicto Final</div>
+    <div class="review-wrap">
+      <div class="review-top">
+        <div class="score-ring"><div class="score-ring-inner">8.1</div></div>
+        <div>
+          <div class="review-verdict">Un milagro <em>despojado de Hollywood</em></div>
+          <div class="review-by">Equipo Editorial CineReview · 8 Enero 2024</div>
+        </div>
+      </div>
+      <div class="review-body">
+        <p>J.A. Bayona ha logrado la adaptación definitiva de la tragedia de los Andes. Donde películas anteriores buscaban la acción y el melodrama heroico, <em>La sociedad de la nieve</em> busca el terror existencial, el respeto solemne y la crudeza física de estar atrapado en un refrigerador gigante de piedra y hielo.</p>
+
+        <div class="pull">"No hay gloria en congelarse hasta la muerte, no hay banda sonora triunfal cuando debes comer a tus amigos. Hay solo un pacto sagrado y silencioso de darlo todo por el otro."</div>
+
+        <p>El manejo del accidente aéreo es probablemente una de las secuencias más viscerales y aterradoras jamás filmadas, sin exageraciones ni cámara lenta, solo el caos ensordecedor de los fierros partiéndose. Pero la verdadera maestría llega después, en el fuselaje, durante los silencios. El dilema de la antropofagia se trata con un nivel de respeto y madurez filosófica que te obliga a preguntarte: "¿Qué haría yo?".</p>
+
+        <p>Enzo Vogrincic carga con el peso emocional de la cinta de manera espectacular, siendo nuestros ojos y nuestra brújula moral. Cuando Numa dice "no hay un amor más grande que el que da la vida por sus amigos", la película entera cobra sentido.</p>
+
+        <p>Es una obra exhaustiva, claustrofóbica y profundamente conmovedora. Bayona nos recuerda que el verdadero "milagro de los Andes" no fue solo salir vivos, sino haber mantenido la humanidad intacta en el lugar más inhumano del mundo.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div"/>
+
+  <section class="cs" style="padding-top:5rem;padding-bottom:5rem;">
+    <div class="sec-lbl">Testimonios del Público</div>
+    <h2 class="bt" style="margin-bottom:3rem;">Voces desde <em>el Valle</em></h2>
+    
+    <div class="comments-list" id="commentsList"></div>
+    
+    <div class="cf">
+      <h3>Escribe tu reseña</h3>
+      <div class="cf-row">
+        <div class="cf-grp">
+          <label>Nombre</label>
+          <input type="text" id="cfName" placeholder="Tu nombre..."/>
+        </div>
+        <div class="cf-grp">
+          <label>Calificación</label>
+          <div class="cf-stars" id="cfStars">
+            <span class="cf-star" data-v="1">★</span>
+            <span class="cf-star" data-v="2">★</span>
+            <span class="cf-star" data-v="3">★</span>
+            <span class="cf-star" data-v="4">★</span>
+            <span class="cf-star" data-v="5">★</span>
+          </div>
+        </div>
+      </div>
+      <div class="cf-grp" style="margin-bottom:1rem;">
+        <label>Mensaje</label>
+        <textarea id="cfText" rows="4" placeholder="¿Qué impacto tuvo la película en ti?..."></textarea>
+      </div>
+      <div class="cf-foot">
+        <button class="btn" onclick="submitCF()">Publicar Reseña</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer style="border-top:1px solid var(--border);padding:3rem 3rem;text-align:center;background:var(--bg);">
+  <span style="font-family:'Montserrat',sans-serif;font-weight: 800; font-size:1.5rem;color:var(--snow);display:block;margin-bottom:.5rem;">Cine<span style="color:var(--ice);font-weight: 300;">Review</span></span>
+  <p style="font-family:'Montserrat',sans-serif; font-weight: 600; font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing: .1em;">© 2025 CineReview · Por los que no volvieron</p>
+</footer>
+
+<div id="toast">Reseña registrada con éxito</div>
+
+<script>
+/* ── Datos del Cast ── */
+const cast = [
+  { name:"Enzo Vogrincic", role:"Numa Turcatti",   init:"EV" },
+  { name:"Agustín Pardella",role:"Nando Parrado",  init:"AP" },
+  { name:"Matías Recalt",  role:"Roberto Canessa", init:"MR" },
+  { name:"Esteban Bigliardi",role:"Javier Methol", init:"EB" },
+  { name:"Diego Vegezzi",  role:"Marcelo Pérez",   init:"DV" },
+  { name:"Fernando Contigiani", role:"Arturo Nogueira", init:"FC" }
+];
+
+/* ── Comentarios ── */
+let comments = [
+  { name:"Andrés P.", init:"AP", rating:5, date:"HACE 2 DÍAS", text:"Salí del cine y abracé a mi familia. La escena de la avalancha es lo más claustrofóbico que he visto en mi vida. Obra maestra de Bayona." },
+  { name:"Lucía M.", init:"LM", rating:5, date:"HACE 1 SEMANA", text:"Lloré desde la mitad hasta el final. Qué decisión tan hermosa darle la voz a los que no lograron regresar. Es una película sobre el amor infinito." },
+  { name:"Tomás G.", init:"TG", rating:4, date:"HACE 2 SEMANAS", text:"Durísima de ver, pero hecha con un respeto inmenso. El maquillaje y cómo van perdiendo peso a lo largo de la película es un trabajo técnico impecable." },
+];
+
+let cfRating = 0;
+
+/* ── Render Cast ── */
+document.getElementById('castGrid').innerHTML = cast.map(c => `
+  <div class="cast-card">
+    <div class="cast-photo">${c.init}</div>
+    <div class="cast-name">${c.name}</div>
+    <div class="cast-role">${c.role}</div>
+  </div>
+`).join('');
+
+/* ── Render Comments ── */
+function renderComments() {
+  document.getElementById('commentsList').innerHTML = comments.map(c => `
+    <div class="cmnt">
+      <div class="cmnt-hd">
+        <div class="av">${c.init}</div>
+        <div>
+          <div class="cmnt-name">${c.name}</div>
+          <div class="cmnt-date">${c.date}</div>
+        </div>
+        <div class="cmnt-stars">${'★'.repeat(c.rating)}${'☆'.repeat(5-c.rating)}</div>
+      </div>
+      <p class="cmnt-body">${c.text}</p>
+    </div>
+  `).join('');
+}
+renderComments();
+
+/* ── Lógica Formulario ── */
+document.getElementById('cfStars').addEventListener('click', e => {
+  const s = e.target.closest('.cf-star'); if(!s) return;
+  cfRating = +s.dataset.v;
+  document.querySelectorAll('.cf-star').forEach((el,i) => el.classList.toggle('on', i<cfRating));
+});
+
+function submitCF() {
+  const name = document.getElementById('cfName').value.trim();
+  const text = document.getElementById('cfText').value.trim();
+  if(!name||!text||!cfRating){ showToast('⚠ Falta información',false); return; }
+  const init = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  comments.unshift({name,init,rating:cfRating,date:'AHORA MISMO',text});
+  renderComments();
+  document.getElementById('cfName').value='';
+  document.getElementById('cfText').value='';
+  cfRating=0;
+  document.querySelectorAll('.cf-star').forEach(s=>s.classList.remove('on'));
+  showToast('✓ Reseña publicada', true);
+}
+
+function showToast(msg,ok){
+  const t=document.getElementById('toast');
+  t.textContent=msg; 
+  t.style.background=ok?'var(--snow)':'var(--sun)';
+  t.style.color=ok?'var(--bg)':'var(--snow)';
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* ── Custom Cursor ── */
+const cur = document.getElementById('cur');
+document.addEventListener('mousemove', e => { cur.style.left=e.clientX+'px'; cur.style.top=e.clientY+'px'; });
+document.addEventListener('mouseover', e => {
+  cur.classList.toggle('h', !!e.target.closest('a, button, .cast-card, .cf-star, .vl-card'));
+});
+
+/* ── Canvas Animación Hero (Ventisca Violenta) ── */
+const hc = document.getElementById('blizzardCanvas');
+const hx = hc.getContext('2d');
+let W, H;
+function resize() { W = hc.width = hc.offsetWidth; H = hc.height = hc.offsetHeight; }
+resize(); window.addEventListener('resize', resize);
+
+const snowflakes = Array.from({length: 400}, () => ({
+  x: Math.random() * W,
+  y: Math.random() * H,
+  length: Math.random() * 15 + 5,
+  speedX: Math.random() * 8 + 4, // Fast horizontal wind
+  speedY: Math.random() * 3 + 1, // Slight downward trajectory
+  opacity: Math.random() * 0.5 + 0.1
+}));
+
+function drawBlizzard() {
+  hx.clearRect(0, 0, W, H);
+  hx.lineWidth = 1.5;
+  hx.lineCap = 'round';
+  
+  snowflakes.forEach((f) => {
+    f.x += f.speedX;
+    f.y += f.speedY;
+    
+    // Reset if out of bounds (looping from left/top)
+    if (f.x > W + 20 || f.y > H + 20) {
+      if (Math.random() > 0.5) {
+        f.x = -20;
+        f.y = Math.random() * H;
+      } else {
+        f.x = Math.random() * W;
+        f.y = -20;
+      }
+    }
+    
+    hx.strokeStyle = `rgba(255, 255, 255, ${f.opacity})`;
+    hx.beginPath();
+    hx.moveTo(f.x, f.y);
+    hx.lineTo(f.x - f.length * (f.speedX/10), f.y - f.length * (f.speedY/10));
+    hx.stroke();
+  });
+  
+  requestAnimationFrame(drawBlizzard);
+}
+drawBlizzard();
+
+/* ── Contadores Animados ── */
+const counters = document.querySelectorAll('.sv[data-t]');
+const obsC = new IntersectionObserver(entries => {
+  entries.forEach(en => {
+    if(!en.isIntersecting) return;
+    const el = en.target; const target = +el.dataset.t; let cur = 0;
+    const id = setInterval(() => {
+      cur = Math.min(cur + target/50, target);
+      el.textContent = Math.round(cur) + (target === 90 ? '%' : '');
+      if(cur >= target) clearInterval(id);
+    }, 25);
+    obsC.unobserve(el);
+  });
+},{threshold:.5});
+counters.forEach(c => obsC.observe(c));
+</script>
+</body>
+</html>

@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CineReview — Críticas de Cine</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0b0b0f;
+      --surface: #13131a;
+      --card: #1a1a24;
+      --border: rgba(255,255,255,0.07);
+      --accent: #e8c47a;
+      --accent2: #c97b4b;
+      --text: #f0ece4;
+      --muted: #7a7889;
+      --red: #e05a5a;
+      --green: #5ae0a0;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+      cursor: none;
+    }
+
+    /* ── Custom cursor ── */
+    #cursor {
+      width: 12px; height: 12px;
+      background: var(--accent);
+      border-radius: 50%;
+      position: fixed; top: 0; left: 0;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform .15s ease, width .2s, height .2s, background .2s;
+      transform: translate(-50%,-50%);
+    }
+    #cursor.hover { width: 36px; height: 36px; background: transparent; border: 2px solid var(--accent); }
+
+    /* ── Noise overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: .4;
+    }
+
+    /* ── Header ── */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 3rem;
+      background: rgba(11,11,15,.85);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem; letter-spacing: .04em;
+      color: var(--accent);
+    }
+    .logo span { font-style: italic; color: var(--text); }
+    nav a {
+      color: var(--muted); text-decoration: none;
+      font-size: .85rem; letter-spacing: .1em; text-transform: uppercase;
+      margin-left: 2rem; transition: color .2s;
+    }
+    nav a:hover { color: var(--accent); }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative; overflow: hidden;
+      height: 82vh; display: flex; align-items: flex-end;
+      padding: 4rem 3rem;
+    }
+    .hero-bg {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, #1a0e2e 0%, #0b0b0f 60%),
+                  repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(232,196,122,.03) 40px, rgba(232,196,122,.03) 41px);
+    }
+    .hero-bg::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 70% 40%, rgba(201,123,75,.15), transparent 70%);
+    }
+    .film-strip {
+      position: absolute; top: 0; right: 6%;
+      width: 220px; height: 100%;
+      display: flex; flex-direction: column; gap: 6px;
+      opacity: .18; overflow: hidden;
+    }
+    .film-frame {
+      flex-shrink: 0; height: 160px;
+      background: var(--surface);
+      border: 3px solid #333;
+      border-radius: 2px;
+      animation: filmRoll 14s linear infinite;
+    }
+    @keyframes filmRoll { from { transform: translateY(0) } to { transform: translateY(-50%) } }
+
+    .hero-content { position: relative; z-index: 2; max-width: 640px; }
+    .hero-tag {
+      display: inline-block; font-size: .7rem; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 1rem;
+    }
+    .hero-content h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.8rem, 6vw, 5rem);
+      line-height: 1.05; margin-bottom: 1.2rem;
+    }
+    .hero-content h1 em { font-style: italic; color: var(--accent2); }
+    .hero-content p { color: var(--muted); font-size: 1.05rem; line-height: 1.7; max-width: 480px; margin-bottom: 2rem; }
+    .btn {
+      display: inline-flex; align-items: center; gap: .6rem;
+      padding: .75rem 1.8rem; border-radius: 3px;
+      font-size: .85rem; letter-spacing: .1em; text-transform: uppercase;
+      text-decoration: none; transition: all .25s; font-family: 'DM Sans', sans-serif;
+    }
+    .btn-primary { background: var(--accent); color: #0b0b0f; font-weight: 500; }
+    .btn-primary:hover { background: var(--accent2); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,196,122,.25); }
+    .btn-ghost { border: 1px solid var(--border); color: var(--text); margin-left: 1rem; }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Section titles ── */
+    .section-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 2.5rem; }
+    .section-title { font-family: 'Playfair Display', serif; font-size: 1.9rem; }
+    .section-title span { font-style: italic; color: var(--accent); }
+    .see-all { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color .2s; }
+    .see-all:hover { color: var(--accent); }
+
+    /* ── Main layout ── */
+    main { padding: 5rem 3rem; max-width: 1400px; margin: 0 auto; }
+
+    /* ── Featured strip ── */
+    .genre-filter {
+      display: flex; gap: .75rem; margin-bottom: 3rem; flex-wrap: wrap;
+    }
+    .genre-pill {
+      padding: .4rem 1.1rem; border-radius: 999px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--muted); font-size: .78rem; letter-spacing: .08em;
+      text-transform: uppercase; cursor: none; transition: all .2s; font-family: 'DM Sans', sans-serif;
+    }
+    .genre-pill.active, .genre-pill:hover { background: var(--accent); color: #0b0b0f; border-color: var(--accent); }
+
+    /* ── Movie grid ── */
+    .movie-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 2rem; margin-bottom: 5rem;
+    }
+    .movie-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px; overflow: hidden;
+      transition: transform .3s ease, box-shadow .3s ease;
+      position: relative;
+    }
+    .movie-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 24px 48px rgba(0,0,0,.5);
+    }
+    .movie-card:hover .card-overlay { opacity: 1; }
+    .movie-card:hover .card-img { transform: scale(1.06); }
+
+    .card-img-wrap { position: relative; overflow: hidden; height: 380px; display: block; }
+    .card-img {
+      width: 100%; height: 100%; object-fit: cover;
+      display: block; transition: transform .5s ease;
+      background: var(--surface);
+    }
+
+    .card-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(11,11,15,.9) 0%, transparent 50%);
+      opacity: 0; transition: opacity .3s;
+      display: flex; align-items: flex-end; padding: 1.5rem;
+    }
+    .play-btn {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--accent); display: flex; align-items: center; justify-content: center;
+      cursor: none; transition: transform .2s;
+    }
+    .play-btn:hover { transform: scale(1.1); }
+    .play-btn svg { margin-left: 3px; }
+
+    .badge {
+      position: absolute; top: .9rem; left: .9rem;
+      font-size: .65rem; letter-spacing: .12em; text-transform: uppercase;
+      padding: .3rem .7rem; border-radius: 2px;
+      background: var(--accent); color: #0b0b0f; font-weight: 500;
+    }
+    .badge.new { background: var(--green); }
+    .badge.hot { background: var(--red); color: #fff; }
+
+    .card-body { padding: 1.25rem; }
+    .card-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: .6rem; }
+    .card-genre { font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+    .stars { display: flex; gap: 2px; }
+    .star { font-size: .9rem; color: var(--accent); }
+    .star.empty { color: var(--border); filter: brightness(3); }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem; margin-bottom: .5rem; line-height: 1.3;
+      color: var(--text); text-decoration: none; display: inline-block; transition: color .2s;
+    }
+    .card-title:hover { color: var(--accent); }
+    .card-director { font-size: .78rem; color: var(--muted); margin-bottom: .9rem; }
+    .card-excerpt { font-size: .85rem; color: rgba(240,236,228,.65); line-height: 1.65; }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 1.1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    .card-footer span { font-size: .75rem; color: var(--muted); }
+    .like-btn {
+      background: none; border: none; color: var(--muted);
+      cursor: none; font-size: .8rem; display: flex; align-items: center; gap: .3rem;
+      transition: color .2s; font-family: 'DM Sans', sans-serif;
+    }
+    .like-btn:hover, .like-btn.liked { color: var(--red); }
+
+    /* ── Comment section ── */
+    .comments-section { margin-bottom: 5rem; }
+    .comments-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+
+    .comment-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 6px; padding: 1.5rem;
+      transition: border-color .25s;
+    }
+    .comment-card:hover { border-color: rgba(232,196,122,.2); }
+    .comment-header { display: flex; align-items: center; gap: .9rem; margin-bottom: 1rem; }
+    .avatar {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 500; font-size: .9rem; color: #0b0b0f; flex-shrink: 0;
+    }
+    .comment-meta h4 { font-size: .9rem; font-weight: 500; margin-bottom: .15rem; }
+    .comment-meta span { font-size: .72rem; color: var(--muted); }
+    .comment-movie { font-size: .72rem; color: var(--accent); letter-spacing: .06em; margin-bottom: .8rem; }
+    .comment-text { font-size: .88rem; color: rgba(240,236,228,.75); line-height: 1.7; }
+
+    /* ── Add comment form ── */
+    .comment-form {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 6px; padding: 2rem;
+    }
+    .comment-form h3 { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin-bottom: 1.5rem; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: .5rem; }
+    .form-group label { font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .form-group input, .form-group select, .form-group textarea {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); border-radius: 4px; padding: .75rem 1rem;
+      font-family: 'DM Sans', sans-serif; font-size: .9rem;
+      transition: border-color .2s; outline: none; resize: vertical;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
+    .form-group select option { background: var(--surface); }
+    .form-rating { display: flex; gap: .4rem; margin-top: .3rem; }
+    .rating-star { font-size: 1.4rem; cursor: none; color: var(--border); filter: brightness(4); transition: color .15s; }
+    .rating-star.on { color: var(--accent); }
+    .form-submit { margin-top: 1.5rem; display: flex; justify-content: flex-end; }
+
+    /* ── Toast notification ── */
+    #toast {
+      position: fixed; bottom: 2rem; right: 2rem;
+      background: var(--card); border: 1px solid var(--accent);
+      color: var(--text); padding: 1rem 1.6rem; border-radius: 4px;
+      font-size: .88rem; z-index: 500;
+      transform: translateY(80px); opacity: 0;
+      transition: all .35s cubic-bezier(.34,1.56,.64,1);
+      pointer-events: none;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── Top picks sidebar strip ── */
+    .two-col { display: grid; grid-template-columns: 1fr 340px; gap: 3rem; margin-bottom: 5rem; }
+    .sidebar-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin-bottom: 1.5rem; }
+    
+    /* Cambiamos .rank-item para que sea un enlace <a> y mantenga sus estilos */
+    a.rank-item {
+      display: flex; gap: 1rem; align-items: flex-start;
+      padding: 1rem 0; border-bottom: 1px solid var(--border);
+      text-decoration: none; color: inherit; transition: background-color 0.3s;
+    }
+    a.rank-item:hover {
+      background-color: rgba(255,255,255,0.02);
+      border-radius: 4px;
+    }
+    
+    .rank-num { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--border); filter: brightness(4); line-height: 1; min-width: 2rem; }
+    .rank-img { width: 60px; height: 80px; object-fit: cover; border-radius: 3px; background: var(--surface); flex-shrink: 0; }
+    .rank-info h4 { font-size: .9rem; font-weight: 500; margin-bottom: .25rem; transition: color .2s; }
+    a.rank-item:hover .rank-info h4 { color: var(--accent); }
+    .rank-info p { font-size: .75rem; color: var(--muted); }
+    .rank-score { font-size: .75rem; color: var(--accent); font-weight: 500; margin-top: .3rem; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 3rem; text-align: center;
+      color: var(--muted); font-size: .8rem;
+    }
+    footer .logo { font-size: 1.3rem; display: block; margin-bottom: .8rem; }
+
+    /* ── Animations ── */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-up { animation: fadeUp .7s ease forwards; opacity: 0; }
+    .delay-1 { animation-delay: .1s; }
+    .delay-2 { animation-delay: .25s; }
+    .delay-3 { animation-delay: .4s; }
+
+    @media (max-width: 900px) {
+      header { padding: 1rem 1.5rem; }
+      main { padding: 3rem 1.5rem; }
+      .hero { padding: 3rem 1.5rem; }
+      .two-col, .comments-grid, .form-row { grid-template-columns: 1fr; }
+      .film-strip { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="cursor"></div>
+
+<header>
+  <div class="logo">Cine<span>Review</span></div>
+  <nav>
+    <a href="#">Películas</a>
+    <a href="#">Críticas</a>
+    <a href="#">Top 100</a>
+    <a href="#">Directores</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="film-strip" id="filmStrip"></div>
+  <div class="hero-content">
+    <span class="hero-tag fade-up">✦ Crítica cinematográfica</span>
+    <h1 class="fade-up delay-1">El arte de <em>ver</em><br>el cine diferente</h1>
+    <p class="fade-up delay-2">Reseñas apasionadas, análisis profundos y las mejores recomendaciones para cinéfilos exigentes.</p>
+    <div class="fade-up delay-3">
+      <a href="#peliculas" class="btn btn-primary">▶ Explorar reseñas</a>
+      <a href="#comentarios" class="btn btn-ghost">Añadir reseña</a>
+    </div>
+  </div>
+</section>
+
+<main>
+
+  <div class="genre-filter" id="genreFilter">
+    <button class="genre-pill active" data-genre="all">Todas</button>
+    <button class="genre-pill" data-genre="drama">Drama</button>
+    <button class="genre-pill" data-genre="thriller">Thriller</button>
+    <button class="genre-pill" data-genre="scifi">Ciencia Ficción</button>
+    <button class="genre-pill" data-genre="comedia">Comedia</button>
+    <button class="genre-pill" data-genre="terror">Terror</button>
+    <button class="genre-pill" data-genre="animacion">Animación</button>
+  </div>
+
+  <div id="peliculas">
+    <div class="section-header">
+      <h2 class="section-title">Reseñas <span>destacadas</span></h2>
+      <a href="#" class="see-all">Ver todas →</a>
+    </div>
+    <div class="movie-grid" id="movieGrid"></div>
+  </div>
+
+  <div class="two-col">
+    <div id="comentarios">
+      <div class="section-header">
+        <h2 class="section-title">Comentarios <span>recientes</span></h2>
+      </div>
+      <div class="comments-grid" id="commentsGrid"></div>
+
+      <div class="comment-form">
+        <h3>Deja tu reseña</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tu nombre</label>
+            <input type="text" id="inName" placeholder="ej. Carlos R." />
+          </div>
+          <div class="form-group">
+            <label>Película</label>
+            <input type="text" id="inMovie" placeholder="Nombre de la película" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Género</label>
+            <select id="inGenre">
+              <option value="">Seleccionar...</option>
+              <option>Drama</option><option>Thriller</option>
+              <option>Ciencia Ficción</option><option>Comedia</option>
+              <option>Terror</option><option>Animación</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Puntuación</label>
+            <div class="form-rating" id="formRating">
+              <span class="rating-star" data-val="1">★</span>
+              <span class="rating-star" data-val="2">★</span>
+              <span class="rating-star" data-val="3">★</span>
+              <span class="rating-star" data-val="4">★</span>
+              <span class="rating-star" data-val="5">★</span>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Tu reseña</label>
+          <textarea id="inComment" rows="4" placeholder="Comparte tu opinión sobre la película..."></textarea>
+        </div>
+        <div class="form-submit">
+          <button class="btn btn-primary" onclick="submitComment()">Publicar reseña →</button>
+        </div>
+      </div>
+    </div>
+
+    <aside>
+      <h3 class="sidebar-title">Top <span style="font-style:italic;color:var(--accent)">10</span> del mes</h3>
+      <div id="topList"></div>
+    </aside>
+  </div>
+
+</main>
+
+<footer>
+  <span class="logo">Cine<span style="font-style:italic">Review</span></span>
+  © 2025 CineReview · Críticas con criterio · Todos los derechos reservados
+</footer>
+
+<div id="toast">✓ ¡Reseña publicada con éxito!</div>
+
+<script>
+/* ─── Data: Enlaces e imágenes apuntando a tus carpetas locales ─── */
+const movies = [
+  { id:1, title:"Oppenheimer", director:"Christopher Nolan", year:2023, genre:"drama", rating:5, badge:"hot",
+    image: "imagenes/Oppenheimer.jpg",
+    url: "Oppenheimer.html",
+    excerpt:"Una obra monumental sobre la dualidad del genio y la destrucción. Nolan nos sumerge en la mente de un hombre atrapado entre la gloria y el horror.", likes:342 },
+  { id:2, title:"Past Lives", director:"Celine Song", year:2023, genre:"drama", rating:5, badge:"new",
+    image: "imagenes/Past-Lives.jpg",
+    url: "Past-Lives.html",
+    excerpt:"Una historia de amor silenciosa y devastadora. Song debuta con una película que te rompe el corazón lentamente, sin prisa y sin piedad.", likes:218 },
+  { id:3, title:"Poor Things", director:"Yorgos Lanthimos", year:2023, genre:"drama", rating:4, badge:null,
+    image: "imagenes/Poor-Things.jpg",
+    url: "Poor-Things.html",
+    excerpt:"Surrealista, provocadora y visualmente delirante. Emma Stone entrega la actuación de su carrera en esta fábula victoriana al revés.", likes:195 },
+  { id:4, title:"Alien: Romulus", director:"Fede Álvarez", year:2024, genre:"thriller", rating:4, badge:"new",
+    image: "imagenes/Alien-Romulus.jpg",
+    url: "Alien-Romulus.html",
+    excerpt:"Álvarez recupera el terror claustrofóbico de la franquicia con una habilidad asombrosa. El mejor Alien desde 1986.", likes:287 },
+  { id:5, title:"Dune: Part Two", director:"Denis Villeneuve", year:2024, genre:"scifi", rating:5, badge:"hot",
+    image: "imagenes/Dune-Part-Two.jpeg",
+    url: "Dune-Part-Two.html",
+    excerpt:"Épica en la escala correcta. Villeneuve consolida su lugar como el gran cineasta de ciencia ficción de esta generación.", likes:401 },
+  { id:6, title:"The Substance", director:"Coralie Fargeat", year:2024, genre:"terror", rating:4, badge:null,
+    image: "imagenes/The-Substance.jpg",
+    url: "The-Substance.html",
+    excerpt:"Body horror visceral y feminista al límite. Fargeat grita en celuloide lo que muchas mujeres sienten cada día frente al espejo.", likes:156 },
+];
+
+const comments = [
+  { name:"Ana G.", initials:"AG", movie:"Oppenheimer", date:"hace 2 días", rating:5,
+    text:"Absolutamente impactante. La secuencia del Trinity test me dejó sin palabras. Cillian Murphy está soberbi." },
+  { name:"Roberto M.", initials:"RM", movie:"Dune: Parte Dos", date:"hace 4 días", rating:5,
+    text:"Villeneuve ha creado una experiencia cinematográfica sin igual. Zendaya finalmente brilla con luz propia." },
+  { name:"Laura C.", initials:"LC", movie:"Past Lives", date:"hace 1 semana", rating:5,
+    text:"Me quedé pensando en esta película durante días. Una historia sobre el amor y los caminos no tomados." },
+  { name:"Javier P.", initials:"JP", movie:"Poor Things", date:"hace 1 semana", rating:4,
+    text:"Visualmente perturbadora en el mejor sentido. Lanthimos vuelve a demostrar que es único en su especie." },
+];
+
+/* ─── Top 10 Data: Enlaces e imágenes apuntando a tus carpetas locales ─── */
+const top10 = [
+  { title:"Dune: Part Two", director:"Villeneuve", score:"9.4", url: "Dune-Part-Two.html", image: "imagenes/Dune-Part-Two.jpeg" },
+  { title:"Oppenheimer", director:"Nolan", score:"9.2", url: "Oppenheimer.html", image: "imagenes/Oppenheimer.jpg" },
+  { title:"Past Lives", director:"Song", score:"9.1", url: "Past-Lives.html", image: "imagenes/Past-Lives.jpg" },
+  { title:"Poor Things", director:"Lanthimos", score:"8.9", url: "Poor-Things.html", image: "imagenes/Poor-Things.jpg" },
+  { title:"The Substance", director:"Fargeat", score:"8.7", url: "The-Substance.html", image: "imagenes/The-Substance.jpg" },
+  { title:"Alien: Romulus", director:"Álvarez", score:"8.5", url: "Alien-Romulus.html", image: "imagenes/Alien-Romulus.jpg" },
+  { title:"Anatomy of a Fall", director:"Triet", score:"8.4", url: "Anatomy-of-a-Fall.html", image: "imagenes/Anatomy-of-a-Fall.jpg" },
+  { title:"Killers of the Flower Moon", director:"Scorsese", score:"8.3", url: "Killers-of-the-Flower-Moon.html", image: "imagenes/Killers-of-the-Flower-Moon.jpg" },
+  { title:"All of Us Strangers", director:"Haigh", score:"8.2", url: "All-of-Us-Strangers.html", image: "imagenes/All-of-Us-Strangers.jpg" },
+  { title:"Society of the Snow", director:"Bayona", score:"8.1", url: "Society-of-the-Snow.html", image: "imagenes/Society-of-the-Snow.jpg" },
+];
+
+/* ─── Render movies: Envolviendo las imágenes y títulos en enlaces <a> ─── */
+let currentGenre = "all";
+let likedMovies = new Set();
+let selectedRating = 0;
+
+function renderStars(n, total=5) {
+  return Array.from({length:total}, (_,i) =>
+    `<span class="star${i<n?'':' empty'}">★</span>`).join('');
+}
+
+function renderMovies(genre) {
+  const grid = document.getElementById('movieGrid');
+  const filtered = genre === 'all' ? movies : movies.filter(m => m.genre === genre);
+  
+  grid.innerHTML = filtered.map(m => `
+    <article class="movie-card fade-up" data-id="${m.id}">
+      <a href="${m.url}" class="card-img-wrap">
+        <img src="${m.image}" alt="${m.title}" class="card-img" onerror="this.src='https://via.placeholder.com/400x600?text=Sin+Imagen'"/>
+        <div class="card-overlay">
+          <div class="play-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#0b0b0f"><polygon points="5,3 19,12 5,21"/></svg>
+          </div>
+        </div>
+        ${m.badge ? `<span class="badge ${m.badge}">${m.badge==='hot'?'🔥 Top':m.badge==='new'?'✦ Nuevo':m.badge}</span>` : ''}
+      </a>
+      <div class="card-body">
+        <div class="card-meta">
+          <span class="card-genre">${m.genre}</span>
+          <div class="stars">${renderStars(m.rating)}</div>
+        </div>
+        <a href="${m.url}" class="card-title">${m.title}</a>
+        <p class="card-director">${m.director} · ${m.year}</p>
+        <p class="card-excerpt">${m.excerpt}</p>
+        <div class="card-footer">
+          <span>${m.year}</span>
+          <button class="like-btn${likedMovies.has(m.id)?' liked':''}" onclick="toggleLike(${m.id}, this)">
+            ♥ <span class="like-count">${m.likes + (likedMovies.has(m.id)?1:0)}</span>
+          </button>
+        </div>
+      </div>
+    </article>
+  `).join('');
+}
+
+/* ─── Render comments ─── */
+function renderComments(list) {
+  document.getElementById('commentsGrid').innerHTML = list.map(c => `
+    <div class="comment-card">
+      <div class="comment-header">
+        <div class="avatar">${c.initials}</div>
+        <div class="comment-meta">
+          <h4>${c.name}</h4>
+          <span>${c.date}</span>
+        </div>
+        <div class="stars" style="margin-left:auto">${renderStars(c.rating)}</div>
+      </div>
+      <p class="comment-movie">✦ ${c.movie}</p>
+      <p class="comment-text">${c.text}</p>
+    </div>
+  `).join('');
+}
+
+/* ─── Render top 10: Cada elemento del Top 10 ahora es un enlace a su respectiva página ─── */
+function renderTop() {
+  document.getElementById('topList').innerHTML = top10.map((m,i) => `
+    <a href="${m.url}" class="rank-item">
+      <span class="rank-num">${String(i+1).padStart(2,'0')}</span>
+      <img src="${m.image}" class="rank-img" alt="${m.title}" onerror="this.src='https://via.placeholder.com/60x80?text=Img'"/>
+      <div class="rank-info">
+        <h4>${m.title}</h4>
+        <p>${m.director}</p>
+        <p class="rank-score">★ ${m.score}</p>
+      </div>
+    </a>
+  `).join('');
+}
+
+/* ─── Film strip ─── */
+function buildFilmStrip() {
+  const strip = document.getElementById('filmStrip');
+  for(let i=0;i<20;i++) strip.innerHTML += '<div class="film-frame"></div>';
+}
+
+/* ─── Genre filter ─── */
+document.getElementById('genreFilter').addEventListener('click', e => {
+  const btn = e.target.closest('.genre-pill');
+  if(!btn) return;
+  document.querySelectorAll('.genre-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  currentGenre = btn.dataset.genre;
+  renderMovies(currentGenre);
+});
+
+/* ─── Like ─── */
+function toggleLike(id, btn) {
+  if(likedMovies.has(id)) { likedMovies.delete(id); btn.classList.remove('liked'); }
+  else { likedMovies.add(id); btn.classList.add('liked'); }
+  const m = movies.find(x=>x.id===id);
+  btn.querySelector('.like-count').textContent = m.likes + (likedMovies.has(id)?1:0);
+}
+
+/* ─── Star rating form ─── */
+document.getElementById('formRating').addEventListener('click', e => {
+  const star = e.target.closest('.rating-star');
+  if(!star) return;
+  selectedRating = +star.dataset.val;
+  document.querySelectorAll('.rating-star').forEach((s,i) => {
+    s.classList.toggle('on', i < selectedRating);
+  });
+});
+
+/* ─── Submit comment ─── */
+function submitComment() {
+  const name = document.getElementById('inName').value.trim();
+  const movie = document.getElementById('inMovie').value.trim();
+  const text = document.getElementById('inComment').value.trim();
+  if(!name || !movie || !text || !selectedRating) {
+    showToast('⚠️ Por favor completa todos los campos.', false);
+    return;
+  }
+  const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  comments.unshift({ name, initials, movie, date:"ahora mismo", rating:selectedRating, text });
+  renderComments(comments);
+  document.getElementById('inName').value='';
+  document.getElementById('inMovie').value='';
+  document.getElementById('inComment').value='';
+  document.getElementById('inGenre').value='';
+  selectedRating=0;
+  document.querySelectorAll('.rating-star').forEach(s => s.classList.remove('on'));
+  showToast('✓ ¡Reseña publicada con éxito!', true);
+  document.getElementById('comentarios').scrollIntoView({behavior:'smooth'});
+}
+
+/* ─── Toast ─── */
+function showToast(msg, ok=true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = ok ? 'var(--accent)' : 'var(--red)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+/* ─── Custom cursor ─── */
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top  = e.clientY + 'px';
+});
+document.addEventListener('mouseover', e => {
+  if(e.target.closest('a,button,.genre-pill,.like-btn,.rating-star,.play-btn'))
+    cursor.classList.add('hover');
+  else cursor.classList.remove('hover');
+});
+
+/* ─── Init ─── */
+buildFilmStrip();
+renderMovies('all');
+renderComments(comments);
+renderTop();
+
+/* ─── Intersection Observer for fade-up ─── */
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(en => { if(en.isIntersecting) en.target.style.animationPlayState = 'running'; });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-up').forEach(el => {
+  el.style.animationPlayState = 'paused';
+  obs.observe(el);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Past Lives — CineReview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #f5f0ea;
+      --surface:  #ede6dc;
+      --card:     #e8dfd3;
+      --border:   rgba(0,0,0,0.07);
+      --accent:   #3a6b8a;
+      --blue2:    #6fa3c0;
+      --rose:     #c47a6a;
+      --text:     #1a1712;
+      --muted:    #8a8278;
+      --ink:      #2c2720;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ── Cursor ── */
+    #cur {
+      width: 10px; height: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+      position: fixed; pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%);
+      transition: width .2s, height .2s, background .2s, opacity .2s;
+    }
+    #cur.h { width: 30px; height: 30px; background: transparent; border: 1.5px solid var(--accent); }
+
+    /* ── Paper texture overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      opacity: .4;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; width: 100%; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 3rem;
+      background: rgba(245,240,234,.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: 'Libre Baskerville', serif;
+      font-size: 1.3rem; color: var(--accent); text-decoration: none;
+    }
+    .nav-logo span { font-style: italic; color: var(--ink); }
+    .nav-back {
+      font-size: .72rem; letter-spacing: .15em; text-transform: uppercase;
+      color: var(--muted); text-decoration: none; transition: color .2s;
+    }
+    .nav-back:hover { color: var(--accent); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: grid; grid-template-columns: 1fr 1fr;
+      position: relative; overflow: hidden;
+      padding-top: 72px;
+    }
+
+    .hero-left {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 5rem 3rem 5rem 3rem;
+      position: relative; z-index: 2;
+    }
+
+    .hero-right {
+      position: relative; overflow: hidden;
+    }
+    /* Animated watercolor / dreamy background for right panel */
+    #heroCanvas {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+    }
+    .hero-right-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to right, var(--bg) 0%, transparent 30%);
+      z-index: 2;
+    }
+
+    /* Floating Korean characters */
+    .korean-float {
+      position: absolute; z-index: 3;
+      font-family: 'Libre Baskerville', serif;
+      color: rgba(58,107,138,.15);
+      pointer-events: none;
+      animation: floatChar linear infinite;
+    }
+    @keyframes floatChar {
+      from { transform: translateY(0) rotate(0deg); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      to   { transform: translateY(-80px) rotate(5deg); opacity: 0; }
+    }
+
+    .eyebrow {
+      font-size: .68rem; letter-spacing: .25em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 1.5rem;
+      display: flex; align-items: center; gap: .8rem;
+    }
+    .eyebrow::before { content:''; width: 32px; height: 1px; background: var(--accent); }
+
+    h1.title {
+      font-family: 'Libre Baskerville', serif;
+      font-size: clamp(3rem, 7vw, 6rem);
+      font-weight: 400; line-height: 1.0;
+      letter-spacing: -.02em;
+      color: var(--ink);
+      margin-bottom: .4rem;
+    }
+    h1.title em { font-style: italic; color: var(--accent); display: block; }
+
+    .title-korean {
+      font-family: 'Libre Baskerville', serif;
+      font-size: 1.1rem; color: var(--muted);
+      font-style: italic; margin-bottom: 2rem;
+      letter-spacing: .05em;
+    }
+
+    .hero-meta {
+      display: flex; flex-wrap: wrap; gap: 1.5rem 2.5rem;
+      margin-bottom: 2.5rem;
+    }
+    .meta-item { display: flex; flex-direction: column; gap: .2rem; }
+    .meta-lbl { font-size: .6rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+    .meta-val { font-size: .9rem; font-weight: 500; color: var(--ink); }
+    .meta-val.accent { color: var(--accent); }
+
+    .score-row {
+      display: flex; align-items: baseline; gap: .5rem; margin-bottom: 2rem;
+    }
+    .score-num {
+      font-family: 'Libre Baskerville', serif;
+      font-size: 4.5rem; font-weight: 700; line-height: 1;
+      color: var(--accent);
+    }
+    .score-denom { color: var(--muted); font-size: 1rem; }
+    .stars { display: flex; gap: 3px; }
+    .star { font-size: 1rem; color: var(--accent); }
+
+    .tagline {
+      font-family: 'Libre Baskerville', serif;
+      font-style: italic; font-size: 1.1rem;
+      color: var(--muted); border-left: 3px solid var(--accent);
+      padding-left: 1rem; line-height: 1.6;
+    }
+
+    /* ── STATS ── */
+    .stats-band {
+      background: var(--accent);
+      padding: 2.5rem 3rem;
+      position: relative; z-index: 2;
+    }
+    .stats-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(5,1fr);
+      gap: 2rem; text-align: center;
+    }
+    .stat-val {
+      font-family: 'Libre Baskerville', serif;
+      font-size: 2.6rem; font-weight: 700;
+      color: #fff; display: block; line-height: 1;
+    }
+    .stat-lbl {
+      font-size: .62rem; letter-spacing: .18em; text-transform: uppercase;
+      color: rgba(255,255,255,.6); margin-top: .4rem; display: block;
+    }
+
+    /* ── MAIN ── */
+    main { position: relative; z-index: 2; }
+    section.cs {
+      max-width: 1100px; margin: 0 auto;
+      padding: 5rem 3rem;
+    }
+
+    .sec-lbl {
+      font-size: .62rem; letter-spacing: .25em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 1.2rem;
+      display: flex; align-items: center; gap: .7rem;
+    }
+    .sec-lbl::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    h2.bt {
+      font-family: 'Libre Baskerville', serif;
+      font-size: clamp(1.8rem,3.5vw,3rem);
+      font-weight: 400; line-height: 1.15;
+      color: var(--ink); margin-bottom: 1.8rem;
+    }
+    h2.bt em { font-style: italic; color: var(--accent); }
+
+    /* ── Synopsis grid ── */
+    .syn-grid { display: grid; grid-template-columns: 1fr 360px; gap: 5rem; align-items: start; }
+
+    .body-text {
+      font-family: 'Libre Baskerville', serif;
+      font-size: 1.1rem; line-height: 1.9;
+      color: rgba(26,23,18,.72);
+    }
+    .body-text p + p { margin-top: 1.3rem; }
+
+    /* Poster */
+    .poster-wrap { position: sticky; top: 7rem; }
+    .poster {
+      width: 100%; aspect-ratio: 2/3;
+      background: linear-gradient(160deg, #c8dae8 0%, #e8d8c8 60%, #c8d0e0 100%);
+      border-radius: 4px;
+      border: 1px solid rgba(58,107,138,.15);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; position: relative;
+    }
+    /* Watercolor circles on poster */
+    .poster::before, .poster::after {
+      content: '';
+      position: absolute; border-radius: 50%;
+      animation: wc 8s ease-in-out infinite alternate;
+    }
+    .poster::before {
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(58,107,138,.25), transparent 70%);
+      top: 20%; left: 10%;
+    }
+    .poster::after {
+      width: 160px; height: 160px;
+      background: radial-gradient(circle, rgba(196,122,106,.2), transparent 70%);
+      bottom: 20%; right: 10%;
+      animation-delay: -4s;
+    }
+    @keyframes wc {
+      from { transform: scale(1) translate(0,0); }
+      to   { transform: scale(1.3) translate(10px,-10px); }
+    }
+    .poster-inner {
+      text-align: center; z-index: 1; padding: 2rem;
+      font-family: 'Libre Baskerville', serif;
+    }
+    .poster-inner .kor { font-size: 2.8rem; color: var(--accent); opacity: .6; display: block; margin-bottom: .5rem; }
+    .poster-inner .en  { font-style: italic; font-size: 1.4rem; color: var(--ink); display: block; }
+    .poster-inner .yr  { font-size: .8rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-top: .5rem; display: block; }
+
+    /* Info sidebar */
+    .info-table { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0; }
+    .info-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: .75rem 0; border-bottom: 1px solid var(--border);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-k { font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    .info-v { font-size: .85rem; color: var(--ink); font-weight: 400; }
+
+    /* ── Timeline ── */
+    .timeline { position: relative; padding-left: 2rem; }
+    .timeline::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 1px; background: var(--border);
+    }
+    .tl-item {
+      position: relative; padding: 0 0 3rem 2rem;
+    }
+    .tl-item::before {
+      content: ''; position: absolute; left: -5px; top: 6px;
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--accent); border: 2px solid var(--bg);
+    }
+    .tl-year {
+      font-size: .68rem; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: .5rem;
+    }
+    .tl-title { font-family: 'Libre Baskerville', serif; font-size: 1.1rem; font-weight: 700; margin-bottom: .5rem; color: var(--ink); }
+    .tl-body { font-size: .9rem; color: var(--muted); line-height: 1.7; }
+
+    /* ── Cast ── */
+    .cast-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr));
+      gap: 1.5rem;
+    }
+    .cast-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 4px; overflow: hidden;
+      transition: transform .25s, box-shadow .25s;
+    }
+    .cast-card:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(0,0,0,.1); }
+    .cast-photo {
+      height: 200px;
+      background: linear-gradient(135deg, #c8dae8, #e8d0c0);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Libre Baskerville', serif;
+      font-size: 2.4rem; color: var(--accent); opacity: .5;
+    }
+    .cast-info { padding: .9rem 1rem; }
+    .cast-name { font-size: .88rem; font-weight: 500; color: var(--ink); margin-bottom: .2rem; }
+    .cast-role { font-size: .75rem; color: var(--muted); }
+
+    /* ── Review ── */
+    .review-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 3rem; position: relative; overflow: hidden;
+    }
+    .review-wrap::after {
+      content: '"';
+      position: absolute; bottom: -2rem; right: 1.5rem;
+      font-family: 'Libre Baskerville', serif;
+      font-size: 14rem; color: rgba(58,107,138,.06);
+      line-height: 1; pointer-events: none;
+    }
+    .review-top { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; }
+    .score-badge {
+      width: 72px; height: 72px; border-radius: 50%;
+      border: 2px solid var(--accent); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .score-badge span {
+      font-family: 'Libre Baskerville', serif;
+      font-size: 1.8rem; font-weight: 700; color: var(--accent);
+    }
+    .review-verdict { font-size: 1.3rem; font-weight: 500; color: var(--ink); }
+    .review-verdict em { font-family: 'Libre Baskerville', serif; font-style: italic; color: var(--accent); }
+    .review-byline { font-size: .72rem; color: var(--muted); margin-top: .3rem; }
+
+    .review-body {
+      font-family: 'Libre Baskerville', serif;
+      font-size: 1.1rem; line-height: 1.95;
+      color: rgba(26,23,18,.75);
+    }
+    .review-body p + p { margin-top: 1.2rem; }
+    .pull {
+      border-left: 3px solid var(--accent);
+      padding: .8rem 1.5rem; margin: 2rem 0;
+      font-style: italic; font-size: 1.25rem;
+      color: var(--accent); line-height: 1.6;
+    }
+
+    /* ── Awards ── */
+    .awards-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+    }
+    .award {
+      padding: 1.2rem 1.4rem;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 4px; border-left: 3px solid var(--accent);
+      display: flex; gap: 1rem; align-items: flex-start;
+      transition: background .2s;
+    }
+    .award:hover { background: rgba(58,107,138,.05); }
+    .award-ico { font-size: 1.3rem; flex-shrink: 0; }
+    .award-title { font-size: .88rem; font-weight: 500; color: var(--ink); margin-bottom: .2rem; }
+    .award-sub { font-size: .75rem; color: var(--muted); }
+    .award-tag {
+      margin-left: auto; flex-shrink: 0; align-self: center;
+      font-size: .6rem; letter-spacing: .1em; text-transform: uppercase;
+      padding: .22rem .65rem; border-radius: 2px;
+    }
+    .won { background: rgba(58,107,138,.12); color: var(--accent); border: 1px solid rgba(58,107,138,.25); }
+    .nom { background: rgba(138,130,120,.1); color: var(--muted); border: 1px solid var(--border); }
+
+    /* ── Comments ── */
+    .comments-list { display: flex; flex-direction: column; gap: 1.2rem; margin-bottom: 2.5rem; }
+    .cmnt {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 4px; padding: 1.5rem;
+      transition: border-color .2s;
+    }
+    .cmnt:hover { border-color: rgba(58,107,138,.25); }
+    .cmnt-hd { display: flex; align-items: center; gap: .9rem; margin-bottom: .8rem; }
+    .av {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue2), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      font-size: .78rem; font-weight: 600; color: #fff; flex-shrink: 0;
+    }
+    .cmnt-name { font-size: .88rem; font-weight: 500; color: var(--ink); }
+    .cmnt-date { font-size: .7rem; color: var(--muted); }
+    .cmnt-stars { margin-left: auto; color: var(--accent); font-size: .85rem; }
+    .cmnt-body { font-size: .88rem; color: rgba(26,23,18,.68); line-height: 1.7; }
+
+    /* ── Form ── */
+    .cf {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 2rem;
+    }
+    .cf h3 {
+      font-family: 'Libre Baskerville', serif;
+      font-size: 1.4rem; font-weight: 400; font-style: italic;
+      color: var(--ink); margin-bottom: 1.5rem;
+    }
+    .cf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .cf-grp { display: flex; flex-direction: column; gap: .45rem; }
+    .cf-grp label { font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+    .cf-grp input, .cf-grp textarea {
+      background: var(--bg); border: 1px solid var(--border);
+      color: var(--ink); border-radius: 3px; padding: .7rem 1rem;
+      font-family: 'Outfit', sans-serif; font-size: .88rem;
+      outline: none; transition: border-color .2s; resize: vertical;
+    }
+    .cf-grp input:focus, .cf-grp textarea:focus { border-color: var(--accent); }
+    .cf-stars { display: flex; gap: .3rem; margin-top: .3rem; }
+    .cf-star { font-size: 1.3rem; cursor: none; color: var(--border); filter: brightness(.7); transition: color .15s; }
+    .cf-star.on { color: var(--accent); }
+    .cf-foot { display: flex; justify-content: flex-end; margin-top: 1.5rem; }
+    .btn {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .7rem 1.8rem; border-radius: 3px; border: none; cursor: none;
+      font-size: .78rem; letter-spacing: .12em; text-transform: uppercase;
+      font-family: 'Outfit', sans-serif; transition: all .2s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; font-weight: 500; }
+    .btn-primary:hover { background: #2d5570; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(58,107,138,.3); }
+
+    /* ── Divider ── */
+    hr.div { max-width: 1100px; margin: 0 auto; border: none; border-top: 1px solid var(--border); }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 2rem; right: 2rem; z-index: 500;
+      background: var(--surface); border: 1px solid var(--accent);
+      color: var(--ink); padding: .9rem 1.6rem; border-radius: 3px; font-size: .85rem;
+      transform: translateY(60px); opacity: 0;
+      transition: all .35s cubic-bezier(.34,1.56,.64,1); pointer-events: none;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── Animations ── */
+    @keyframes fadeUp { from { opacity:0; transform:translateY(22px) } to { opacity:1; transform:translateY(0) } }
+    .fu { opacity:0; animation: fadeUp .8s ease forwards; }
+    .d1{animation-delay:.15s} .d2{animation-delay:.3s} .d3{animation-delay:.45s} .d4{animation-delay:.6s}
+
+    @media (max-width: 860px) {
+      .hero { grid-template-columns: 1fr; min-height: auto; }
+      .hero-right { height: 300px; }
+      .hero-left, section.cs { padding-left: 1.5rem; padding-right: 1.5rem; }
+      .syn-grid, .awards-grid, .cf-row { grid-template-columns: 1fr; }
+      .poster-wrap { position: static; max-width: 260px; }
+      .stats-inner { grid-template-columns: repeat(3,1fr); }
+      nav { padding: 1rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="cur"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="cinereview.html" class="nav-logo">Cine<span>Review</span></a>
+  <a href="cinereview.html" class="nav-back">← Volver al inicio</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="eyebrow fu">Drama romántico · 2023 · A24</div>
+    <h1 class="title fu d1">Past<em>Lives</em></h1>
+    <p class="title-korean fu d2">지난 생애들 — Jidnan saengaedeur</p>
+    <div class="score-row fu d2">
+      <span class="score-num">9.1</span>
+      <span class="score-denom">/10</span>
+      <div style="margin-left:1rem;">
+        <div class="stars">
+          <span class="star">★</span><span class="star">★</span><span class="star">★</span>
+          <span class="star">★</span><span class="star">★</span>
+        </div>
+        <div style="font-size:.62rem;color:var(--muted);margin-top:.3rem;letter-spacing:.1em">PUNTUACIÓN EDITORIAL</div>
+      </div>
+    </div>
+    <div class="hero-meta fu d3">
+      <div class="meta-item"><span class="meta-lbl">Directora</span><span class="meta-val">Celine Song</span></div>
+      <div class="meta-item"><span class="meta-lbl">Año</span><span class="meta-val">2023</span></div>
+      <div class="meta-item"><span class="meta-lbl">Duración</span><span class="meta-val">106 min</span></div>
+      <div class="meta-item"><span class="meta-lbl">Idioma</span><span class="meta-val">Inglés / Coreano</span></div>
+      <div class="meta-item"><span class="meta-lbl">Taquilla</span><span class="meta-val accent">$23M</span></div>
+    </div>
+    <p class="tagline fu d4">"Si hay una vida anterior y otra posterior, ¿qué somos el uno para el otro en ésta?"</p>
+  </div>
+
+  <div class="hero-right">
+    <canvas id="heroCanvas"></canvas>
+    <div class="hero-right-overlay"></div>
+    <!-- Floating Korean chars -->
+    <div id="koreanFloats"></div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-band">
+  <div class="stats-inner">
+    <div><span class="stat-val" data-t="23">0</span><span class="stat-lbl">Millones en taquilla</span></div>
+    <div><span class="stat-val" data-t="2">0</span><span class="stat-lbl">Nominaciones Oscar</span></div>
+    <div><span class="stat-val" data-t="96">0</span><span class="stat-lbl">% Rotten Tomatoes</span></div>
+    <div><span class="stat-val" data-t="106">0</span><span class="stat-lbl">Minutos de duración</span></div>
+    <div><span class="stat-val" data-t="91">0</span><span class="stat-lbl">Metacritic score</span></div>
+  </div>
+</div>
+
+<main>
+
+  <!-- SYNOPSIS -->
+  <section class="cs">
+    <div class="syn-grid">
+      <div>
+        <div class="sec-lbl">Sinopsis</div>
+        <h2 class="bt">Amor, <em>destino</em> y los caminos no tomados</h2>
+        <div class="body-text">
+          <p>Nora y Hae Sung son dos amigos de infancia en Seúl que se separan cuando la familia de Nora emigra a Canadá. Doce años después se reencuentran por videoconferencia, conectados al instante por algo que no saben nombrar. Pero la distancia y sus vidas separadas vuelven a interponerse.</p>
+          <p>Otros doce años más tarde, Hae Sung viaja a Nueva York —donde Nora vive y está casada con un escritor americano llamado Arthur— para un último encuentro que los tres saben que lo cambiará todo, aunque nadie sepa exactamente cómo.</p>
+          <p>Celine Song, en su debut como directora, construye la película a partir de su propia experiencia: la historia es autobiográfica, y esa autenticidad se siente en cada plano, en cada silencio, en la extraña ternura con que retrata a los tres personajes sin convertir a ninguno en villano.</p>
+        </div>
+      </div>
+
+      <!-- Poster -->
+      <div class="poster-wrap">
+        <div class="poster">
+          <div class="poster-inner">
+            <span class="kor">지난 생</span>
+            <span class="en">Past Lives</span>
+            <span class="yr">Celine Song · 2023</span>
+          </div>
+        </div>
+        <div class="info-table">
+          <div class="info-row"><span class="info-k">Directora</span><span class="info-v">Celine Song</span></div>
+          <div class="info-row"><span class="info-k">Guión</span><span class="info-v">Celine Song</span></div>
+          <div class="info-row"><span class="info-k">Fotografía</span><span class="info-v">Shabier Kirchner</span></div>
+          <div class="info-row"><span class="info-k">Música</span><span class="info-v">Christopher Bear / Daniel Rossen</span></div>
+          <div class="info-row"><span class="info-k">Productora</span><span class="info-v">A24 / justSo</span></div>
+          <div class="info-row"><span class="info-k">País</span><span class="info-v">Estados Unidos / Corea del Sur</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div"/>
+
+  <!-- TIMELINE -->
+  <section class="cs" style="padding-top:4rem;padding-bottom:4rem;">
+    <div class="sec-lbl">Estructura narrativa</div>
+    <h2 class="bt">Tres encuentros a lo largo de <em>24 años</em></h2>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-year">Seúl · Años 90</div>
+        <div class="tl-title">Primer amor de infancia</div>
+        <div class="tl-body">Nora (Na Young) y Hae Sung tienen doce años y comparten los últimos días juntos antes de que la familia de ella emigre a Canadá. Un amor que no sabe que es amor, expresado en paseos y miradas que nadie ha olvidado.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-year">Nueva York / Seúl · 2012</div>
+        <div class="tl-title">El reencuentro digital</div>
+        <div class="tl-body">Doce años después, Nora busca su nombre en Facebook. Las videollamadas entre Nueva York y Seúl recuperan algo dormido. Pero la diferencia horaria —doce horas— funciona como metáfora perfecta: siempre en mundos distintos, nunca al mismo tiempo.</div>
+      </div>
+      <div class="tl-item" style="padding-bottom:0">
+        <div class="tl-year">Nueva York · 2023</div>
+        <div class="tl-title">El último adiós</div>
+        <div class="tl-body">Hae Sung viaja a Nueva York. Nora es ya otra persona —escritora, casada, neoyorquina— pero algo en ella aún reconoce al niño de Seúl. El film culmina en una despedida ante un taxi que se convierte en una de las escenas más desgarradoras del cine reciente.</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div"/>
+
+  <!-- CAST -->
+  <section class="cs" style="padding-top:4rem;padding-bottom:4rem;">
+    <div class="sec-lbl">Reparto</div>
+    <h2 class="bt">Tres <em>actuaciones</em> perfectas</h2>
+    <div class="cast-grid" id="castGrid"></div>
+  </section>
+
+  <hr class="div"/>
+
+  <!-- CRITICAL REVIEW -->
+  <section class="cs" style="padding-top:4rem;padding-bottom:4rem;">
+    <div class="sec-lbl">Crítica editorial</div>
+    <div class="review-wrap">
+      <div class="review-top">
+        <div class="score-badge"><span>9.1</span></div>
+        <div>
+          <div class="review-verdict">Una obra de <em>quietud devastadora</em></div>
+          <div class="review-byline">Por el equipo editorial de CineReview · 11 junio 2023</div>
+        </div>
+      </div>
+      <div class="review-body">
+        <p>Hay una escena en Past Lives donde los tres protagonistas están sentados en un bar de Nueva York —Nora, Hae Sung y Arthur— y nadie dice nada especialmente profundo. Beben, se ríen, se miran. Y sin embargo es imposible contener las lágrimas. Eso es lo que hace Celine Song: construye emociones del tamaño de un océano con los materiales más simples.</p>
+
+        <div class="pull">"Song no filma lo que se dice. Filma lo que no se puede decir."</div>
+
+        <p>Past Lives es una película sobre el in-yeon, el concepto coreano que describe el hilo de destino que conecta a las personas —en esta vida y en las anteriores. Pero Song tiene la inteligencia de no explicarlo demasiado. Lo deja flotar como la emoción misma: sin definición precisa, pero completamente real.</p>
+
+        <p>Greta Lee entrega una actuación que debería haberle dado el Oscar. Su Nora es una mujer dividida entre dos versiones de sí misma, entre dos idiomas, entre dos continentes, entre dos formas de querer. Teo Yoo es igualmente extraordinario en su contención: Hae Sung es el hombre que espera, que no abandona, que cruza el mundo para decir adiós correctamente.</p>
+
+        <p>Y John Magaro hace algo muy difícil: ser el marido sin convertirse en el obstáculo. Arthur es una presencia de generosidad rara en el cine, un personaje que entiende que el amor no es exclusivo, que la historia de su mujer le pertenece a ella antes que a él.</p>
+
+        <p>El director de fotografía Shabier Kirchner filma Nueva York como si fuera un sueño ligeramente fuera de foco, mientras que los recuerdos de Seúl brillan con una claridad dolorosa. La música de Grizzly Bear es escasa, casi tímida, como si supiera que su trabajo es no interrumpir.</p>
+
+        <p>Past Lives no busca resolución porque la vida no la tiene. Se despide con la misma elegancia con que comienza: una mujer en la oscuridad, viendo alejarse un taxi, sabiendo que algunos amores existen precisamente para no ser completados.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div"/>
+
+  <!-- AWARDS -->
+  <section class="cs" style="padding-top:4rem;padding-bottom:4rem;">
+    <div class="sec-lbl">Premios y reconocimientos</div>
+    <h2 class="bt">Reconocida en los <em>festivales más importantes</em></h2>
+    <div class="awards-grid" id="awardsList"></div>
+  </section>
+
+  <hr class="div"/>
+
+  <!-- COMMENTS -->
+  <section class="cs" style="padding-top:4rem;padding-bottom:4rem;">
+    <div class="sec-lbl">Comunidad</div>
+    <h2 class="bt" style="margin-bottom:2rem;">Lo que dicen <em>los lectores</em></h2>
+    <div class="comments-list" id="commentsList"></div>
+    <div class="cf">
+      <h3>¿Qué te pareció Past Lives?</h3>
+      <div class="cf-row">
+        <div class="cf-grp">
+          <label>Tu nombre</label>
+          <input type="text" id="cfName" placeholder="ej. Sofía M."/>
+        </div>
+        <div class="cf-grp">
+          <label>Puntuación</label>
+          <div class="cf-stars" id="cfStars">
+            <span class="cf-star" data-v="1">★</span>
+            <span class="cf-star" data-v="2">★</span>
+            <span class="cf-star" data-v="3">★</span>
+            <span class="cf-star" data-v="4">★</span>
+            <span class="cf-star" data-v="5">★</span>
+          </div>
+        </div>
+      </div>
+      <div class="cf-grp" style="margin-bottom:1rem;">
+        <label>Tu reseña</label>
+        <textarea id="cfText" rows="4" placeholder="¿Te quedaste pensando en ella días después de verla?..."></textarea>
+      </div>
+      <div class="cf-foot">
+        <button class="btn btn-primary" onclick="submitCF()">Publicar reseña →</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer style="border-top:1px solid var(--border);padding:2.5rem 3rem;text-align:center;color:var(--muted);font-size:.78rem;position:relative;z-index:2;">
+  <span style="font-family:'Libre Baskerville',serif;font-size:1.3rem;color:var(--accent);display:block;margin-bottom:.6rem;font-style:italic">CineReview</span>
+  © 2025 CineReview · Críticas con criterio
+</footer>
+
+<div id="toast"></div>
+
+<script>
+/* ── Cast data ── */
+const cast = [
+  { name:"Greta Lee",    role:"Nora (Na Young)",  init:"GL" },
+  { name:"Teo Yoo",      role:"Hae Sung",         init:"TY" },
+  { name:"John Magaro",  role:"Arthur Zaturansky",init:"JM" },
+  { name:"Moon Seung-ah",role:"Nora · niña",      init:"MS" },
+  { name:"Leem Seung-min",role:"Hae Sung · niño", init:"LS" },
+];
+
+const awards = [
+  { ico:"🏆", title:"Nominación — Mejor Película", sub:"Academy Awards 2024", status:"nom" },
+  { ico:"🏆", title:"Nominación — Mejor Guión Original", sub:"Academy Awards 2024", status:"nom" },
+  { ico:"✓",  title:"Ganadora — Mejor Película", sub:"National Board of Review 2023", status:"won" },
+  { ico:"✓",  title:"Ganadora — Mejor Ópera Prima", sub:"Independent Spirit Awards 2024", status:"won" },
+  { ico:"✓",  title:"Ganadora — Mejor Guión Original", sub:"Los Angeles Film Critics 2023", status:"won" },
+  { ico:"✓",  title:"Ganadora — Mejor Actriz (Greta Lee)", sub:"New York Film Critics Circle", status:"won" },
+  { ico:"☆",  title:"Nominación — Mejor Dirección (Celine Song)", sub:"Critics Choice Awards 2024", status:"nom" },
+  { ico:"☆",  title:"Nominación — Mejor Película Internacional", sub:"BAFTA 2024", status:"nom" },
+];
+
+let comments = [
+  { name:"Sofía R.", init:"SR", rating:5, date:"hace 3 días",    text:"Me rompió el corazón de la manera más delicada posible. La despedida final me dejó llorando en silencio durante minutos. Rara vez una película me afecta tanto." },
+  { name:"Carlos V.", init:"CV", rating:5, date:"hace 1 semana",  text:"Greta Lee es absolutamente magistral. Con solo una mirada transmite todo el peso de 24 años de distancia y amor no dicho. Película del año sin discusión." },
+  { name:"Marta L.",  init:"ML", rating:4, date:"hace 2 semanas", text:"Hermosa y dolorosa a partes iguales. Me gustó especialmente cómo Song retrata al marido americano, sin convertirlo en el malo. Un equilibrio difícil de lograr." },
+  { name:"Diego P.",  init:"DP", rating:5, date:"hace 3 semanas", text:"El concepto de in-yeon explicado en la película me acompañó semanas. ¿Cuántas vidas habremos cruzado con las personas que amamos sin saberlo? Imprescindible." },
+];
+
+let cfRating = 0;
+
+/* ── Render cast ── */
+document.getElementById('castGrid').innerHTML = cast.map(c => `
+  <div class="cast-card">
+    <div class="cast-photo">${c.init}</div>
+    <div class="cast-info">
+      <div class="cast-name">${c.name}</div>
+      <div class="cast-role">${c.role}</div>
+    </div>
+  </div>
+`).join('');
+
+/* ── Render awards ── */
+document.getElementById('awardsList').innerHTML = awards.map(a => `
+  <div class="award">
+    <span class="award-ico">${a.ico}</span>
+    <div>
+      <div class="award-title">${a.title}</div>
+      <div class="award-sub">${a.sub}</div>
+    </div>
+    <span class="award-tag ${a.status}">${a.status==='won'?'✓ Ganado':'Nominado'}</span>
+  </div>
+`).join('');
+
+/* ── Render comments ── */
+function renderComments() {
+  document.getElementById('commentsList').innerHTML = comments.map(c => `
+    <div class="cmnt">
+      <div class="cmnt-hd">
+        <div class="av">${c.init}</div>
+        <div><div class="cmnt-name">${c.name}</div><div class="cmnt-date">${c.date}</div></div>
+        <div class="cmnt-stars">${'★'.repeat(c.rating)}${'☆'.repeat(5-c.rating)}</div>
+      </div>
+      <p class="cmnt-body">${c.text}</p>
+    </div>
+  `).join('');
+}
+renderComments();
+
+/* ── Stars ── */
+document.getElementById('cfStars').addEventListener('click', e => {
+  const s = e.target.closest('.cf-star'); if(!s) return;
+  cfRating = +s.dataset.v;
+  document.querySelectorAll('.cf-star').forEach((el,i) => el.classList.toggle('on', i < cfRating));
+});
+
+/* ── Submit ── */
+function submitCF() {
+  const name = document.getElementById('cfName').value.trim();
+  const text = document.getElementById('cfText').value.trim();
+  if(!name || !text || !cfRating) { showToast('⚠ Completa todos los campos', false); return; }
+  const init = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  comments.unshift({ name, init, rating: cfRating, date: 'ahora mismo', text });
+  renderComments();
+  document.getElementById('cfName').value='';
+  document.getElementById('cfText').value='';
+  cfRating=0;
+  document.querySelectorAll('.cf-star').forEach(s=>s.classList.remove('on'));
+  showToast('✓ ¡Reseña publicada!', true);
+}
+
+function showToast(msg, ok) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = ok ? 'var(--accent)' : 'var(--rose)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* ── Cursor ── */
+const cur = document.getElementById('cur');
+document.addEventListener('mousemove', e => { cur.style.left=e.clientX+'px'; cur.style.top=e.clientY+'px'; });
+document.addEventListener('mouseover', e => {
+  cur.classList.toggle('h', !!e.target.closest('a,button,.cast-card,.award,.cf-star,.tl-item'));
+});
+
+/* ── Hero canvas — watercolor dreamy ── */
+const canvas = document.getElementById('heroCanvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+function resize() { W = canvas.width = canvas.offsetWidth; H = canvas.height = canvas.offsetHeight; }
+resize(); window.addEventListener('resize', resize);
+
+const blobs = Array.from({length:8}, (_,i) => ({
+  x: Math.random()*1, y: Math.random()*1,
+  r: 150 + Math.random()*250,
+  vx: (Math.random()-.5)*.0003,
+  vy: (Math.random()-.5)*.0003,
+  hue: i%2===0 ? [200,220] : [15,30],
+  phase: Math.random()*Math.PI*2,
+}));
+
+const korChars = ['인연','생','사랑','꿈','별','기억','시간','마음'];
+const floatEl = document.getElementById('koreanFloats');
+korChars.forEach((ch, i) => {
+  const el = document.createElement('div');
+  el.className = 'korean-float';
+  el.textContent = ch;
+  el.style.cssText = `
+    left:${10+Math.random()*80}%;
+    bottom:${10+Math.random()*40}%;
+    font-size:${1.5+Math.random()*2.5}rem;
+    animation-duration:${12+Math.random()*8}s;
+    animation-delay:${-Math.random()*12}s;
+  `;
+  floatEl.appendChild(el);
+});
+
+let t2 = 0;
+function draw2() {
+  t2 += .005;
+  ctx.clearRect(0,0,W,H);
+
+  // Warm paper bg
+  ctx.fillStyle = '#dce8f0';
+  ctx.fillRect(0,0,W,H);
+
+  blobs.forEach(b => {
+    b.x += b.vx; b.y += b.vy;
+    if(b.x<-.3||b.x>1.3) b.vx*=-1;
+    if(b.y<-.3||b.y>1.3) b.vy*=-1;
+    const pulse = Math.sin(t2+b.phase)*.15+1;
+    const [h1,h2] = b.hue;
+    const hue = h1 + Math.sin(t2+b.phase)*((h2-h1)/2);
+    const g = ctx.createRadialGradient(b.x*W, b.y*H, 0, b.x*W, b.y*H, b.r*pulse);
+    g.addColorStop(0, `hsla(${hue},55%,72%,0.35)`);
+    g.addColorStop(1, `hsla(${hue},55%,72%,0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(b.x*W, b.y*H, b.r*pulse, 0, Math.PI*2); ctx.fill();
+  });
+
+  // Subtle horizontal lines (paper feel)
+  ctx.strokeStyle = 'rgba(58,107,138,0.04)';
+  ctx.lineWidth = 1;
+  for(let y=0;y<H;y+=28) {
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  }
+
+  requestAnimationFrame(draw2);
+}
+draw2();
+
+/* ── Counter animation ── */
+const counters = document.querySelectorAll('.stat-val[data-t]');
+const obs2 = new IntersectionObserver(entries => {
+  entries.forEach(en => {
+    if(!en.isIntersecting) return;
+    const el = en.target; const target = +el.dataset.t; let cur2 = 0;
+    const id = setInterval(() => {
+      cur2 = Math.min(cur2 + target/60, target);
+      el.textContent = Math.round(cur2) + (target>=90?'%':target>=23?'M':'');
+      if(cur2>=target) clearInterval(id);
+    }, 20);
+    obs2.unobserve(el);
+  });
+},{ threshold:.5 });
+counters.forEach(c => obs2.observe(c));
+</script>
+</body>
+</html>
