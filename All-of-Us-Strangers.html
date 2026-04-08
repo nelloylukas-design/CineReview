@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>All of Us Strangers — CineReview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0a0510;
+      --surface: #140b1f; 
+      --card:    #1c0f2b;
+      --border:  rgba(244, 63, 94, 0.15);
+      --neon:    #f43f5e;
+      --purple:  #a855f7;
+      --amber:   #fbbf24;
+      --text:    #f8fafc;
+      --muted:   #94a3b8;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    #cur {
+      width: 12px; height: 12px;
+      background: var(--neon);
+      position: fixed; pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%);
+      border-radius: 50%;
+      transition: width .2s, height .2s, background .2s;
+      mix-blend-mode: screen;
+      box-shadow: 0 0 15px var(--neon);
+    }
+    #cur.h { 
+      width: 40px; height: 40px; background: transparent; 
+      border: 1px solid var(--purple); 
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.4), inset 0 0 10px rgba(168, 85, 247, 0.2);
+    }
+
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9000;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.8; mix-blend-mode: screen;
+    }
+
+    nav {
+      position: fixed; top: 0; width: 100%; z-index: 200;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 3rem;
+      background: linear-gradient(to bottom, rgba(10, 5, 16, 0.9) 0%, rgba(10, 5, 16, 0) 100%);
+    }
+    .nav-logo {
+      font-family: 'Playfair Display', serif; font-weight: 500;
+      font-size: 1.4rem; color: var(--neon); text-decoration: none;
+      letter-spacing: 0.05em;
+    }
+    .nav-logo span { font-weight: 400; color: var(--text); font-style: italic;}
+    .nav-back {
+      font-family: 'Outfit', sans-serif; font-size: .75rem; letter-spacing: .15em; 
+      text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color .3s;
+    }
+    .nav-back:hover { color: var(--neon); }
+
+    .hero {
+      min-height: 100vh; position: relative;
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 0 3rem; overflow: hidden; text-align: center;
+      align-items: center;
+    }
+
+    #heroCanvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+    
+    .hero-grad {
+      position: absolute; inset: 0; z-index: 1;
+      background: radial-gradient(circle at 50% 40%, rgba(168,85,247,0.1) 0%, transparent 60%),
+                  linear-gradient(to top, var(--bg) 0%, transparent 30%, transparent 80%, var(--bg) 100%);
+    }
+
+    .hero-content { position: relative; z-index: 2; max-width: 900px; margin-top: 5rem; }
+    
+    .eyebrow {
+      font-family: 'Outfit', sans-serif; font-size: .75rem; letter-spacing: .3em; 
+      text-transform: uppercase; color: var(--purple); margin-bottom: 1.5rem; display: block;
+    }
+
+    h1.hero-title {
+      font-family: 'Playfair Display', serif; font-size: clamp(3rem, 8vw, 6.5rem);
+      font-weight: 400; line-height: 1; letter-spacing: -0.02em; margin-bottom: 0.5rem;
+      color: var(--text);
+      text-shadow: 0 10px 40px rgba(244, 63, 94, 0.4);
+    }
+    h1.hero-title em { font-style: italic; color: var(--neon); }
+
+    .hero-subtitle {
+      font-size: .95rem; letter-spacing: .2em; text-transform: uppercase; 
+      color: var(--muted); margin-bottom: 3rem; font-weight: 300;
+    }
+
+    .score-strip { 
+      display: flex; align-items: center; justify-content: center; gap: 3rem; 
+      margin-bottom: 3rem; padding-top: 2rem; 
+      border-top: 1px solid rgba(244, 63, 94, 0.2);
+      position: relative;
+    }
+    .score-strip::before {
+      content: ''; position: absolute; top: -1px; left: 20%; right: 20%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--neon), transparent);
+    }
+
+    .score-big { display: flex; align-items: baseline; gap: .3rem; }
+    .score-big .n { font-family: 'Playfair Display', serif; font-size: 4.5rem; color: var(--neon); line-height: 1; }
+    .score-big .d { color: var(--muted); font-size: 1.2rem; }
+    .stars { display:flex; gap:5px; }
+    .star  { font-size: 1.3rem; color: var(--purple); text-shadow: 0 0 10px rgba(168,85,247,0.5); }
+
+    .meta-pills { display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; }
+    .pill {
+      font-family: 'Outfit', sans-serif; padding: .4rem 1.2rem; border-radius: 30px;
+      font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
+      border: 1px solid var(--border); color: var(--text);
+      background: rgba(244, 63, 94, 0.05); backdrop-filter: blur(5px);
+    }
+    .pill.glow { border-color: rgba(168,85,247,0.5); color: var(--purple); box-shadow: 0 0 15px rgba(168,85,247,0.2); }
+
+    .stats-band {
+      background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      padding: 4rem 3rem; position: relative; z-index: 2;
+    }
+    .stats-inner {
+      max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(4,1fr); gap: 2rem; text-align: center;
+    }
+    .sv { font-family:'Playfair Display',serif; font-size:3.2rem; color:var(--text); display:block; line-height:1; margin-bottom: 0.5rem;}
+    .sl { font-family: 'Outfit', sans-serif; font-size:.7rem; letter-spacing:.15em; text-transform:uppercase; color:var(--neon); display:block; }
+
+    main { position: relative; z-index: 2; }
+    section.cs { max-width: 1200px; margin: 0 auto; padding: 6rem 3rem; }
+
+    .sec-lbl {
+      font-family: 'Outfit', sans-serif; font-size: .7rem; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--purple); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;
+    }
+    .sec-lbl::after { content:''; flex:1; height:1px; background:linear-gradient(90deg, var(--border), transparent); }
+
+    h2.bt {
+      font-family: 'Playfair Display', serif; font-size: clamp(2rem,3.5vw,3.2rem);
+      font-weight: 400; line-height: 1.2; color: var(--text); margin-bottom: 2.5rem;
+    }
+    h2.bt em { color: var(--neon); font-style: italic; }
+
+    hr.div { 
+      max-width:1200px; margin:0 auto; border:none; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent); opacity: 0.8; 
+    }
+
+    .syn-grid { display:grid; grid-template-columns:1fr 380px; gap:5rem; align-items:start; }
+
+    .body-text { font-size: 1.1rem; line-height: 1.9; color: rgba(248, 250, 252, 0.8); font-weight: 300;}
+    .body-text p + p { margin-top:1.5rem; }
+    .dropcap { float: left; font-family: 'Playfair Display', serif; font-size: 4rem; line-height: 0.8; padding-top: 8px; padding-right: 12px; color: var(--neon); }
+
+    .poster-wrap { position:sticky; top:7rem; }
+    .poster {
+      width:100%; aspect-ratio:2/3; background: linear-gradient(135deg, #1c0f2b 0%, #0a0510 100%); 
+      border: 1px solid var(--border); position:relative; overflow:hidden; 
+      display:flex; flex-direction: column; align-items:center; justify-content:center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(244,63,94,0.1);
+    }
+    .poster::after {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 70% 30%, rgba(168,85,247,0.4), transparent 60%);
+      mix-blend-mode: screen; pointer-events: none;
+    }
+    .poster-inner { position:relative; z-index:1; text-align:center; padding:1.5rem; }
+    .poster-inner .big { font-family:'Playfair Display',serif; font-size:3.2rem; color:var(--text); line-height:1; letter-spacing: 0.02em; font-weight: 500;}
+    .poster-inner .big em { color: var(--neon); font-style: italic; display: block; }
+    .poster-inner .sm { font-family:'Outfit', sans-serif; font-size:.65rem; letter-spacing:.25em; text-transform:uppercase; color:var(--purple); margin-top:1rem; display:block; }
+
+    .info-table { margin-top:2rem; }
+    .ir { display:flex; justify-content:space-between; align-items:center; padding:.8rem 0; border-bottom:1px solid rgba(244,63,94,0.1); }
+    .ir:last-child { border:none; }
+    .ik { font-family:'Outfit', sans-serif; font-size:.65rem; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); }
+    .iv { font-size:.85rem; color:var(--text); font-weight: 400;}
+
+    .vl-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; margin-top:2rem; }
+    .vl-card {
+      background:var(--card); border:1px solid var(--border); padding:2rem 1.8rem;
+      position: relative; transition:all .4s; border-radius: 8px; overflow: hidden;
+    }
+    .vl-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 100%;
+      background: linear-gradient(to bottom, rgba(244,63,94,0.05), transparent); opacity: 0; transition: opacity .4s;
+    }
+    .vl-card:hover { transform:translateY(-5px); border-color:var(--neon); box-shadow: 0 10px 30px rgba(244,63,94,0.15); }
+    .vl-card:hover::before { opacity: 1; }
+    .vl-icon { font-size:2rem; margin-bottom:1.2rem; display:block; filter: hue-rotate(300deg) saturate(2); position: relative;}
+    .vl-title { font-family:'Playfair Display',serif; font-size:1.2rem; margin-bottom:.8rem; color: var(--text); font-weight: 500; position: relative;}
+    .vl-body { font-size:.85rem; color:var(--muted); line-height:1.7; position: relative;}
+    
+    .cast-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:1.5rem; margin-top:2rem; }
+    .cast-card {
+      background:var(--surface); border:1px solid var(--border); border-radius: 8px; overflow: hidden;
+      transition:all .3s; cursor: none; text-align: center; padding-bottom: 1.2rem;
+    }
+    .cast-card:hover { border-color: var(--purple); transform: translateY(-3px); box-shadow: 0 10px 20px rgba(168,85,247,0.15);}
+    .cast-photo {
+      height:200px; display:flex; align-items:center; justify-content:center;
+      background: linear-gradient(to bottom, #2d1b4e, #140b1f);
+      font-family:'Playfair Display',serif; font-size:3rem; color: rgba(244,63,94,0.3);
+      border-bottom: 1px solid var(--border); margin-bottom: 1rem; font-style: italic;
+    }
+    .cast-photo img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .cast-name { font-family:'Outfit',sans-serif; font-weight: 500; font-size:1rem; margin-bottom:.3rem; color: var(--text); }
+    .cast-role { font-family:'Outfit',sans-serif; font-size:.7rem; color:var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+    .review-wrap {
+      background:var(--surface); border:1px solid var(--border); padding:4rem; position:relative; overflow:hidden; border-radius: 8px;
+    }
+    .review-wrap::after {
+      content: ''; position: absolute; bottom: -50%; right: -10%; width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(168,85,247,0.1), transparent 70%); border-radius: 50%; pointer-events: none;
+    }
+    
+    .review-top { display:flex; align-items:center; gap:2rem; margin-bottom:2.5rem; position: relative;}
+    .score-ring {
+      width:80px; height:80px; border:2px solid var(--neon); flex-shrink:0;
+      display:flex; align-items:center; justify-content:center; border-radius: 50%;
+      box-shadow: 0 0 20px rgba(244,63,94,0.3);
+    }
+    .score-ring-inner { font-family:'Playfair Display',serif; font-size:2rem; color:var(--text); }
+    .review-verdict { font-family:'Playfair Display',serif; font-size:1.6rem; color: var(--text); font-weight: 400;}
+    .review-verdict em { color:var(--neon); font-style: italic; }
+    .review-by { font-family:'Outfit',sans-serif; font-size:.7rem; color:var(--muted); margin-top:.5rem; text-transform: uppercase; letter-spacing: .1em; }
+
+    .review-body { font-size:1.05rem; line-height:1.9; color:rgba(248, 250, 252, 0.85); position: relative; z-index: 1;}
+    .review-body p + p { margin-top:1.5rem; }
+    .pull {
+      padding:1.5rem 2rem; margin:2.5rem 0; background: rgba(244,63,94,0.05); border-left: 2px solid var(--neon);
+      font-family: 'Playfair Display', serif; font-size:1.4rem; color:var(--text); line-height:1.5; font-style: italic;
+    }
+
+    .comments-list { display:flex; flex-direction:column; gap:1.2rem; margin-bottom:4rem; }
+    .cmnt {
+      background:var(--surface); border:1px solid var(--border); padding:1.8rem; border-radius: 8px;
+      transition: border-color .3s;
+    }
+    .cmnt:hover { border-color: rgba(168,85,247,0.4); }
+    .cmnt-hd { display:flex; align-items:center; gap:1rem; margin-bottom:1rem; }
+    .av {
+      width:40px; height:40px; background:var(--card); border: 1px solid var(--neon);
+      display:flex; align-items:center; justify-content:center; border-radius: 50%;
+      font-family: 'Playfair Display', serif; font-style: italic; font-size:1rem; color:var(--text); flex-shrink:0;
+    }
+    .cmnt-name { font-weight: 500; font-size:.95rem; color:var(--text); }
+    .cmnt-date { font-family:'Outfit',sans-serif; font-size:.65rem; color:var(--muted); margin-top: 0.2rem; letter-spacing: .05em; text-transform: uppercase;}
+    .cmnt-stars { margin-left:auto; color:var(--purple); font-size:1rem; text-shadow: 0 0 8px rgba(168,85,247,0.5);}
+    .cmnt-body { font-size:.95rem; color:var(--muted); line-height:1.7; }
+
+    .cf { background:var(--surface); border:1px solid var(--border); padding:3rem; border-radius: 8px;}
+    .cf h3 { font-family:'Playfair Display',serif; font-size:1.5rem; margin-bottom:2rem; color: var(--neon); font-weight: 400; font-style: italic;}
+    .cf-row { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+    .cf-grp { display:flex; flex-direction:column; gap:.6rem; }
+    .cf-grp label { font-family:'Outfit',sans-serif; font-size:.65rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+    .cf-grp input, .cf-grp textarea {
+      background:var(--card); border:1px solid var(--border); color:var(--text);
+      padding:1rem 1.2rem; font-family:'Outfit',sans-serif; font-size:.9rem; border-radius: 4px;
+      outline:none; transition:all .3s; resize:vertical;
+    }
+    .cf-grp input:focus, .cf-grp textarea:focus { border-color:var(--purple); background: rgba(168,85,247,0.05);}
+    .cf-stars { display:flex; gap:.4rem; margin-top:.2rem; }
+    .cf-star { font-size:1.4rem; cursor:none; color:rgba(255,255,255,0.1); transition:color .2s; }
+    .cf-star.on { color:var(--purple); text-shadow: 0 0 10px rgba(168,85,247,0.6);}
+    .cf-foot { display:flex; justify-content:flex-end; margin-top:2rem; }
+    
+    .btn {
+      display:inline-flex; align-items:center; justify-content: center; padding:.8rem 2rem; 
+      background: var(--neon); color:var(--text); border: none; border-radius: 30px;
+      font-family:'Outfit',sans-serif; font-weight: 500; cursor:none; font-size:.8rem; letter-spacing:.1em; 
+      text-transform:uppercase; transition:all .3s;
+    }
+    .btn:hover { background:var(--purple); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(168,85,247,0.4); }
+
+    #toast {
+      position:fixed; bottom:2rem; right:2rem; z-index:500;
+      background:var(--card); border: 1px solid var(--neon); color:var(--text); font-weight: 400; 
+      padding:1rem 2rem; font-size:.85rem; border-radius: 30px;
+      transform:translateY(80px); opacity:0;
+      transition:all .4s cubic-bezier(.175, .885, .32, 1.275); pointer-events:none;
+      box-shadow: 0 10px 30px rgba(244,63,94,0.2);
+    }
+    #toast.show { transform:translateY(0); opacity:1; }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+    .fu { opacity:0; animation:fadeUp 1s ease forwards; }
+    .d1{animation-delay:.15s} .d2{animation-delay:.3s} .d3{animation-delay:.45s} .d4{animation-delay:.6s}
+
+    @media(max-width:900px){
+      nav,.hero,.stats-band{padding-left:1.5rem;padding-right:1.5rem;}
+      section.cs{padding-left:1.5rem;padding-right:1.5rem; padding-top: 4rem; padding-bottom: 4rem;}
+      .syn-grid,.cf-row{grid-template-columns:1fr;}
+      .poster-wrap{position:static;max-width:280px; margin: 0 auto;}
+      .stats-inner,.vl-grid{grid-template-columns:repeat(2,1fr);}
+      h1.hero-title { font-size: 3.2rem; }
+    }
+    @media(max-width:500px){
+      .stats-inner{grid-template-columns:1fr;}
+      .vl-grid{grid-template-columns:1fr;}
+      .score-strip { flex-direction: column; gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="cur"></div>
+
+<nav>
+  <a href="index.html" class="nav-logo">Cine<span>Review</span></a>
+  <a href="index.html" class="nav-back">← Volver al inicio</a>
+</nav>
+
+<section class="hero">
+  <canvas id="bokehCanvas"></canvas>
+  <div class="hero-grad"></div>
+
+  <div class="hero-content">
+    <span class="eyebrow fu">Fantasía Romántica · Drama · 2023</span>
+    <h1 class="hero-title fu d1">All of Us <br><em>Strangers</em></h1>
+    <p class="hero-subtitle fu d2">Andrew Haigh · Searchlight Pictures</p>
+    
+    <div class="score-strip fu d3">
+      <div class="score-big">
+        <span class="n">8.2</span><span class="d">/10</span>
+      </div>
+      <div>
+        <div class="stars">★★★★<span style="color: rgba(168,85,247,0.3);">★</span></div>
+        <div style="font-family:'Outfit',sans-serif; font-size:.65rem; color:var(--muted); margin-top:.4rem; letter-spacing:.15em; text-transform:uppercase;">Puntuación Editorial</div>
+      </div>
+    </div>
+    
+    <div class="meta-pills fu d4">
+      <span class="pill">105 MIN</span>
+      <span class="pill">22 DIC 2023</span>
+      <span class="pill">6 NOMS. BAFTA</span>
+      <span class="pill glow">THE POWER OF LOVE</span>
+    </div>
+  </div>
+</section>
+
+<div class="stats-band">
+  <div class="stats-inner">
+    <div><span class="sv" data-t="18">0</span><span class="sl">Millones Taquilla</span></div>
+    <div><span class="sv" data-t="6">0</span><span class="sl">Noms. a los BAFTA</span></div>
+    <div><span class="sv" data-t="96">0</span><span class="sl">% Rotten Tomatoes</span></div>
+    <div><span class="sv" data-t="105">0</span><span class="sl">Minutos (Duración)</span></div>
+  </div>
+</div>
+
+<main>
+
+  <section class="cs">
+    <div class="syn-grid">
+      <div>
+        <div class="sec-lbl">Sinopsis</div>
+        <h2 class="bt">Fantasmas de un <em>pasado inconcluso</em></h2>
+        <div class="body-text">
+          <p><span class="dropcap">A</span>dam es un guionista solitario que vive en una torre de apartamentos casi vacía en el Londres contemporáneo. Una noche, tras una alarma de incendios, tiene un encuentro fortuito con su misterioso y único vecino, Harry, que altera el ritmo de su melancólica y aislada vida cotidiana.</p>
+          <p>A medida que la relación entre ambos se desarrolla de manera tierna y vulnerable, Adam se siente impulsado a volver a su ciudad natal en los suburbios. Al llegar a la casa de su infancia, descubre algo imposible: sus padres viven allí, luciendo exactamente igual que el día en que murieron en un accidente automovilístico treinta años atrás.</p>
+          <p>La película entrelaza estas dos líneas emocionales: el despertar del amor y la sexualidad en el presente con Harry, y las conversaciones pendientes, dolorosas y sanadoras en el pasado con sus padres, explorando la orfandad, salir del clóset, el perdón y el peso del dolor acumulado.</p>
+        </div>
+      </div>
+
+      <div class="poster-wrap">
+        <div class="poster">
+          <div class="poster-inner">
+            <span class="big">ALL OF US</span><br>
+            <span class="big"><em>STRANGERS</em></span>
+            <span class="sm">Andrew Haigh</span>
+          </div>
+        </div>
+        <div class="info-table">
+          <div class="ir"><span class="ik">Director</span><span class="iv">Andrew Haigh</span></div>
+          <div class="ir"><span class="ik">Guión</span><span class="iv">Andrew Haigh</span></div>
+          <div class="ir"><span class="ik">Basada en</span><span class="iv">"Strangers" de Taichi Yamada</span></div>
+          <div class="ir"><span class="ik">Fotografía</span><span class="iv">Jamie D. Ramsay</span></div>
+          <div class="ir"><span class="ik">Música</span><span class="iv">Emilie Levienaise-Farrouch</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div"/>
+
+  <section class="cs" style="padding-top:5rem;padding-bottom:5rem;">
+    <div class="sec-lbl">Lenguaje Emocional</div>
+    <h2 class="bt">Una ciudad de <em>cristales y reflejos</em></h2>
+    <div class="vl-grid">
+      <div class="vl-card">
+        <span class="vl-icon">🪟</span>
+        <div class="vl-title">El Aislamiento Visual</div>
+        <div class="vl-body">Andrew Haigh y su director de fotografía utilizan constantemente ventanas, reflejos y cristales. Adam suele ser filmado a través del cristal, simbolizando su desconexión del mundo real y su existencia casi fantasmal antes de conocer a Harry.</div>
+      </div>
+      <div class="vl-card">
+        <span class="vl-icon">📼</span>
+        <div class="vl-title">Música como Memoria</div>
+        <div class="vl-body">La banda sonora de los años 80 no es solo ambientación. Canciones como <em>"The Power of Love"</em> de Frankie Goes to Hollywood actúan como anclas emocionales que conectan a Adam con la época en la que perdió a sus padres y con sus propios sentimientos reprimidos.</div>
+      </div>
+      <div class="vl-card">
+        <span class="vl-icon">🚇</span>
+        <div class="vl-title">El Tren del Subconsciente</div>
+        <div class="vl-body">Los viajes en tren de Adam hacia su casa de la infancia funcionan como transiciones oníricas. No sabemos exactamente dónde termina la realidad y dónde empieza la fantasía o el duelo manifestándose.</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div"/>
+
+  <section class="cs" style="padding-top:5rem;padding-bottom:5rem;">
+    <div class="sec-lbl">Un Cuarteto Perfecto</div>
+    <h2 class="bt">Almas <em>Vulnerables</em></h2>
+    <div class="cast-grid" id="castGrid"></div>
+  </section>
+
+  <hr class="div"/>
+
+  <section class="cs" style="padding-top:5rem;padding-bottom:5rem;">
+    <div class="sec-lbl">Veredicto Final</div>
+    <div class="review-wrap">
+      <div class="review-top">
+        <div class="score-ring"><div class="score-ring-inner">8.2</div></div>
+        <div>
+          <div class="review-verdict">Una herida <em>hermosamente abierta</em></div>
+          <div class="review-by">Equipo Editorial CineReview · 10 Enero 2024</div>
+        </div>
+      </div>
+      <div class="review-body">
+        <p>Existen películas que miras, y existen películas que te habitan. <em>All of Us Strangers</em> pertenece a las segundas. Andrew Haigh ha construido un poema sobre la soledad y el duelo que no busca asustar con sus "fantasmas", sino que los utiliza para darnos el abrazo que a veces la vida real nos niega.</p>
+
+        <div class="pull">"Si alguna vez has deseado tener una última conversación con alguien que ya no está, esta película te romperá el corazón en mil pedazos, pero te ayudará a recogerlos."</div>
+
+        <p>Andrew Scott ofrece la actuación de su carrera. Sus ojos transmiten una tristeza tan profunda y antigua que duele mirar, pero la forma en la que se ilumina cuando está con sus padres o con Harry (un Paul Mescal que irradia un encanto melancólico y frágil) es magia pura. Claire Foy y Jamie Bell completan un cuarteto actoral perfecto, logrando la extraña tarea de ser padres de un hombre que es mayor que ellos.</p>
+
+        <p>La película aborda temas específicos de la experiencia queer (el miedo al VIH en los 80, la alienación de la familia, salir del clóset tarde), pero su exploración del dolor de la pérdida es universal. El final, devastador, inesperado y cósmicamente trágico, te deja sentado en la oscuridad mientras suena la música, procesando el impacto.</p>
+        
+        <p>No es una película fácil de digerir emocionalmente, pero es una experiencia profundamente purificadora. Una obra maestra silenciosa sobre el amor que sobrevive a la muerte.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div"/>
+
+  <section class="cs" style="padding-top:5rem;padding-bottom:5rem;">
+    <div class="sec-lbl">Opiniones del Público</div>
+    <h2 class="bt" style="margin-bottom:3rem;">Ecos en la <em>oscuridad</em></h2>
+    
+    <div class="comments-list" id="commentsList"></div>
+    
+    <div class="cf">
+      <h3>Comparte tu recuerdo</h3>
+      <div class="cf-row">
+        <div class="cf-grp">
+          <label>Nombre</label>
+          <input type="text" id="cfName" placeholder="Tu nombre..."/>
+        </div>
+        <div class="cf-grp">
+          <label>Calificación</label>
+          <div class="cf-stars" id="cfStars">
+            <span class="cf-star" data-v="1">★</span>
+            <span class="cf-star" data-v="2">★</span>
+            <span class="cf-star" data-v="3">★</span>
+            <span class="cf-star" data-v="4">★</span>
+            <span class="cf-star" data-v="5">★</span>
+          </div>
+        </div>
+      </div>
+      <div class="cf-grp" style="margin-bottom:1rem;">
+        <label>Mensaje</label>
+        <textarea id="cfText" rows="4" placeholder="¿Qué sentiste al verla? Escribe aquí..."></textarea>
+      </div>
+      <div class="cf-foot">
+        <button class="btn" onclick="submitCF()">Publicar Reseña</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer style="border-top:1px solid var(--border);padding:4rem 3rem;text-align:center;background:var(--bg);">
+  <span style="font-family:'Playfair Display',serif; font-size:1.8rem;color:var(--neon);display:block;margin-bottom:.5rem;">Cine<span style="color:var(--text);font-style:italic;">Review</span></span>
+  <p style="font-family:'Outfit',sans-serif; font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing: .15em;">© 2025 CineReview · Protege a los que amas</p>
+</footer>
+
+<div id="toast">Reseña publicada con éxito</div>
+
+<script>
+const cast = [
+  { name:"Andrew Scott", role:"Adam",  archivo:"Andrew Scott.jpg", init:"AS" },
+  { name:"Paul Mescal",  role:"Harry", archivo:"Paul Mescal.jpg", init:"PM" },
+  { name:"Claire Foy",   role:"Mamá",  archivo:"Claire Foy.jpg", init:"CF" },
+  { name:"Jamie Bell",   role:"Papá",  archivo:"Jamie Bell.jpg", init:"JB" }
+];
+
+let comments = [
+  { name:"Martín R.", init:"MR", rating:5, date:"HACE 2 DÍAS", text:"No he podido dejar de llorar ni de pensar en ella. La química entre Scott y Mescal es increíble, pero las escenas con los padres me destrozaron. El final es cruel pero hermoso." },
+  { name:"Valeria S.", init:"VS", rating:4, date:"HACE 1 SEMANA", text:"Un poema visual. La forma en la que enfocan Londres la hace ver como un limbo. Es triste, muy triste, pero creo que te ayuda a sanar si has perdido a alguien." },
+  { name:"Julián M.", init:"JM", rating:5, date:"HACE 2 SEMANAS", text:"Andrew Scott merece todos los premios del mundo por esto. Nunca volveré a escuchar 'The Power of Love' de la misma manera." },
+];
+
+let cfRating = 0;
+
+document.getElementById('castGrid').innerHTML = cast.map(c => `
+  <div class="cast-card">
+    <div class="cast-photo">
+      <img src="imagenes/all of us strangers/${encodeURI(c.archivo)}" alt="${c.name}" onerror="if(!this.dataset.retried){this.dataset.retried=true; this.src='imagenes/all of us strangers/${encodeURI(c.archivo.replace('.jpg', '.jpeg'))}';}">
+    </div>
+    <div class="cast-name">${c.name}</div>
+    <div class="cast-role">${c.role}</div>
+  </div>
+`).join('');
+
+function renderComments() {
+  document.getElementById('commentsList').innerHTML = comments.map(c => `
+    <div class="cmnt">
+      <div class="cmnt-hd">
+        <div class="av">${c.init}</div>
+        <div>
+          <div class="cmnt-name">${c.name}</div>
+          <div class="cmnt-date">${c.date}</div>
+        </div>
+        <div class="cmnt-stars">${'★'.repeat(c.rating)}${'☆'.repeat(5-c.rating)}</div>
+      </div>
+      <p class="cmnt-body">${c.text}</p>
+    </div>
+  `).join('');
+}
+renderComments();
+
+document.getElementById('cfStars').addEventListener('click', e => {
+  const s = e.target.closest('.cf-star'); if(!s) return;
+  cfRating = +s.dataset.v;
+  document.querySelectorAll('.cf-star').forEach((el,i) => el.classList.toggle('on', i<cfRating));
+});
+
+function submitCF() {
+  const name = document.getElementById('cfName').value.trim();
+  const text = document.getElementById('cfText').value.trim();
+  if(!name||!text||!cfRating){ showToast('⚠ Faltan campos',false); return; }
+  const init = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  comments.unshift({name,init,rating:cfRating,date:'AHORA MISMO',text});
+  renderComments();
+  document.getElementById('cfName').value='';
+  document.getElementById('cfText').value='';
+  cfRating=0;
+  document.querySelectorAll('.cf-star').forEach(s=>s.classList.remove('on'));
+  showToast('✓ Reseña registrada', true);
+}
+
+function showToast(msg,ok){
+  const t=document.getElementById('toast');
+  t.textContent=msg; 
+  t.style.borderColor=ok?'var(--neon)':'var(--purple)';
+  t.style.color=ok?'var(--neon)':'var(--purple)';
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+const cur = document.getElementById('cur');
+document.addEventListener('mousemove', e => { cur.style.left=e.clientX+'px'; cur.style.top=e.clientY+'px'; });
+document.addEventListener('mouseover', e => {
+  cur.classList.toggle('h', !!e.target.closest('a, button, .cast-card, .cf-star, .vl-card'));
+});
+
+const hc = document.getElementById('bokehCanvas');
+const hx = hc.getContext('2d');
+let W, H;
+function resize() { W = hc.width = hc.offsetWidth; H = hc.height = hc.offsetHeight; }
+resize(); window.addEventListener('resize', resize);
+
+const colors = ['rgba(244,63,94,', 'rgba(168,85,247,', 'rgba(251,191,36,'];
+
+const orbs = Array.from({length: 40}, () => ({
+  x: Math.random() * W,
+  y: Math.random() * H,
+  vx: (Math.random() - 0.5) * 0.2,
+  vy: (Math.random() - 0.5) * 0.2 - 0.1,
+  radius: Math.random() * 80 + 20,
+  colorStr: colors[Math.floor(Math.random() * colors.length)],
+  alpha: Math.random() * 0.3 + 0.05,
+  pulse: Math.random() * Math.PI * 2
+}));
+
+function drawBokeh() {
+  hx.clearRect(0, 0, W, H);
+  hx.globalCompositeOperation = 'screen';
+  
+  orbs.forEach((o) => {
+    o.x += o.vx;
+    o.y += o.vy;
+    o.pulse += 0.01;
+    
+    if (o.x < -100) o.x = W + 100;
+    if (o.x > W + 100) o.x = -100;
+    if (o.y < -100) o.y = H + 100;
+    if (o.y > H + 100) o.y = -100;
+    
+    const currentAlpha = o.alpha + Math.sin(o.pulse) * 0.05;
+    
+    hx.beginPath();
+    const grad = hx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.radius);
+    grad.addColorStop(0, o.colorStr + currentAlpha + ')');
+    grad.addColorStop(0.5, o.colorStr + (currentAlpha * 0.5) + ')');
+    grad.addColorStop(1, o.colorStr + '0)');
+    
+    hx.fillStyle = grad;
+    hx.arc(o.x, o.y, o.radius, 0, Math.PI * 2);
+    hx.fill();
+  });
+  
+  hx.globalCompositeOperation = 'source-over';
+  requestAnimationFrame(drawBokeh);
+}
+drawBokeh();
+
+const counters = document.querySelectorAll('.sv[data-t]');
+const obsC = new IntersectionObserver(entries => {
+  entries.forEach(en => {
+    if(!en.isIntersecting) return;
+    const el = en.target; const target = +el.dataset.t; let cur = 0;
+    const id = setInterval(() => {
+      cur = Math.min(cur + target/50, target);
+      el.textContent = Math.round(cur) + (target === 18 ? 'M' : target === 105 || target === 6 ? '' : '%');
+      if(cur >= target) clearInterval(id);
+    }, 30);
+    obsC.unobserve(el);
+  });
+},{threshold:.5});
+counters.forEach(c => obsC.observe(c));
+</script>
+</body>
+</html>

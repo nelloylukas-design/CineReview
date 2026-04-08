@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Referencias Cinematográficas — CineReview</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.15);
+    --text: #f0ede8;
+    --muted: #7a7570;
+    --accent: #c8a96e;
+    --accent2: #8fb8c4;
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-weight: 300;
+    line-height: 1.7;
+    padding: 0;
+  }
+
+  header {
+    padding: 5rem 2rem 3rem;
+    max-width: 860px;
+    margin: 0 auto;
+    border-bottom: 0.5px solid var(--border);
+    position: relative;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), transparent);
+  }
+  .h-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1.2rem;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 400;
+    line-height: 1.1;
+    margin-bottom: 1.4rem;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .h-desc {
+    font-size: 0.95rem;
+    color: var(--muted);
+    max-width: 560px;
+    line-height: 1.75;
+  }
+  .h-desc a {
+    color: var(--accent2);
+    text-decoration: none;
+    border-bottom: 0.5px solid var(--accent2);
+    padding-bottom: 1px;
+    transition: opacity 0.2s;
+  }
+  .h-desc a:hover { opacity: 0.7; }
+
+  .format-box {
+    max-width: 860px;
+    margin: 2rem auto 0;
+    padding: 1.5rem 2rem;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 4px;
+  }
+  .format-box h3 {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .format-box p {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+  .format-box strong { color: var(--text); font-weight: 400; }
+
+  main {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 3rem 2rem 6rem;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 0.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .section-label span { color: var(--accent); }
+
+  .ref-card {
+    border-bottom: 0.5px solid var(--border);
+    padding: 2.2rem 0;
+    display: grid;
+    grid-template-columns: 2.5rem 1fr;
+    gap: 0 1.5rem;
+    transition: border-color 0.2s;
+  }
+  .ref-card:hover { border-color: var(--border-hover); }
+  .ref-num {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--accent);
+    padding-top: 0.35rem;
+    letter-spacing: 0.05em;
+  }
+  .ref-body {}
+  .ref-title {
+    font-family: var(--serif);
+    font-size: 1.45rem;
+    font-weight: 500;
+    font-style: italic;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+  }
+  .ref-meta {
+    font-size: 0.82rem;
+    color: var(--text);
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
+  .ref-meta em { color: var(--muted); font-style: normal; }
+  .ref-full {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.85;
+    padding: 0.9rem 1.1rem;
+    border-left: 2px solid var(--accent);
+    background: var(--surface);
+    border-radius: 0 4px 4px 0;
+    margin-bottom: 0.9rem;
+  }
+  .ref-full strong { color: var(--accent); font-weight: 500; }
+  .ref-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+  }
+  .tag {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    border: 0.5px solid var(--border-hover);
+    padding: 0.2rem 0.6rem;
+    border-radius: 2px;
+    text-transform: uppercase;
+  }
+  .tag.genre { color: var(--accent2); border-color: rgba(143,184,196,0.25); }
+  .tag.award { color: var(--accent); border-color: rgba(200,169,110,0.25); }
+
+  .footer-note {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2rem 2rem 4rem;
+    border-top: 0.5px solid var(--border);
+  }
+  .footer-note p {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    line-height: 1.9;
+    letter-spacing: 0.01em;
+  }
+  .footer-note p + p { margin-top: 0.6rem; }
+  .footer-note strong { color: var(--text); font-weight: 400; }
+
+  @media (max-width: 600px) {
+    header, main, .footer-note, .format-box { padding-left: 1.2rem; padding-right: 1.2rem; }
+    .ref-card { grid-template-columns: 2rem 1fr; gap: 0 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="h-label">CineReview — Bibliografía &amp; Créditos</p>
+  <h1>Referencias<br><em>Cinematográficas</em></h1>
+  <p class="h-desc">
+    Lista completa de fuentes, créditos y atribuciones de las diez películas reseñadas en CineReview.
+    Todo el contenido editorial es de elaboración propia; los datos fílmicos corresponden a información
+    pública disponible en fuentes como <a href="https://www.imdb.com" target="_blank">IMDb</a>,
+    <a href="https://www.rottentomatoes.com" target="_blank">Rotten Tomatoes</a> y
+    <a href="https://www.metacritic.com" target="_blank">Metacritic</a>.
+    Las imágenes de actores y carteles son propiedad de sus respectivas productoras y distribuidoras.
+  </p>
+</header>
+
+<div class="format-box" style="max-width:860px;margin:0 auto;">
+  <h3>Formato de cita utilizado</h3>
+  <p>
+    Se sigue el formato <strong>MLA 9ª edición</strong> adaptado para obras audiovisuales:
+    <strong>Apellido, Nombre (dir.).</strong> <em>Título de la película.</em> Productora, Año.
+    Los puntajes de Rotten Tomatoes y Metacritic corresponden a la fecha de publicación de cada reseña.
+    El análisis crítico y las opiniones expresadas son responsabilidad exclusiva de CineReview.
+  </p>
+</div>
+
+<main>
+  <div class="section-label"><span>[01—10]</span> Películas referenciadas</div>
+
+  <div class="ref-card">
+    <div class="ref-num">01</div>
+    <div class="ref-body">
+      <div class="ref-title">All of Us Strangers</div>
+      <div class="ref-meta">
+        Andrew Haigh · 2023 · Reino Unido<br>
+        <em>Searchlight Pictures / Film4 / Blueprint Pictures</em>
+      </div>
+      <div class="ref-full">
+        <strong>Cita MLA:</strong><br>
+        Haigh, Andrew, dir. <em>All of Us Strangers.</em> Searchlight Pictures / Film4, 2023.<br><br>
+        <strong>Basada en:</strong> Novela <em>Strangers</em> de Taichi Yamada (1987).<br>
+        <strong>Guión:</strong> Andrew Haigh.<br>
+        <strong>Fotografía:</strong> Jamie D. Ramsay.<br>
+        <strong>Música:</strong> Emilie Levienaise-Farrouch.<br>
+        <strong>Reparto principal:</strong> Andrew Scott, Paul Mescal, Claire Foy, Jamie Bell.<br>
+        <strong>Puntaje RT:</strong> 96% · <strong>Metacritic:</strong> 92/100.
+      </div>
+      <div class="ref-tags">
+        <span class="tag genre">Drama romántico</span>
+        <span class="tag genre">Fantasía</span>
+        <span class="tag">Reino Unido · 2023</span>
+        <span class="tag">105 min.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-num">02</div>
+    <div class="ref-body">
+      <div class="ref-title">Anatomy of a Fall</div>
+      <div class="ref-meta">
+        Justine Triet · 2023 · Francia<br>
+        <em>Les Films Pelléas / Neon (distribución EE.UU.)</em>
+      </div>
+      <div class="ref-full">
+        <strong>Cita MLA:</strong><br>
+        Triet, Justine, dir. <em>Anatomy of a Fall (Anatomie d'une chute).</em> Les Films Pelléas / Neon, 2023.<br><br>
+        <strong>Guión:</strong> Justine Triet y Arthur Harari.<br>
+        <strong>Fotografía:</strong> Simon Beaufils.<br>
+        <strong>Música:</strong> Phoebe Bridgers (música extradiegética); extractos de P.I. Tchaikovsky.<br>
+        <strong>Reparto principal:</strong> Sandra Hüller, Swann Arlaud, Milo Machado-Graner, Messi (el perro).<br>
+        <strong>Galardones:</strong> Palme d'Or — Festival de Cannes 2023. Oscar al Mejor Guión Original (2024).<br>
+        <strong>Puntaje RT:</strong> 96% · <strong>Metacritic:</strong> 88/100.
+      </div>
+      <div class="ref-tags">
+        <span class="tag genre">Drama judicial</span>
+        <span class="tag genre">Thriller</span>
+        <span class="tag award">Palme d'Or Cannes 2023</span>
+        <span class="tag">Francia · 2023</span>
+        <span class="tag">151 min.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-num">03</div>
+    <div class="ref-body">
+      <div class="ref-title">Alien: Romulus</div>
+      <div class="ref-meta">
+        Fede Álvarez · 2024 · Estados Unidos<br>
+        <em>20th Century Studios / Scott Free Productions</em>
+      </div>
+      <div class="ref-full">
+        <strong>Cita MLA:</strong><br>
+        Álvarez, Fede, dir. <em>Alien: Romulus.</em> 20th Century Studios, 2024.<br><br>
+        <strong>Guión:</strong> Fede Álvarez y Rodo Sayagues.<br>
+        <strong>Fotografía:</strong> Galo Olivares.<br>
+        <strong>Música:</strong> Benjamin Wallfisch.<br>
+        <strong>Producción ejecutiva:</strong> Ridley Scott.<br>
+        <strong>Reparto principal:</strong> Cailee Spaeny, David Jonsson, Archie Renaux, Isabela Merced.<br>
+        <strong>Franquicia:</strong> Secuela de <em>Alien</em> (Ridley Scott, 1979) y <em>Aliens</em> (James Cameron, 1986).<br>
+        <strong>Puntaje RT:</strong> 80%.
+      </div>
+      <div class="ref-tags">
+        <span class="tag genre">Ciencia ficción</span>
+        <span class="tag genre">Terror</span>
+        <span class="tag">EE.UU. · 2024</span>
+        <span class="tag">119 min.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-num">04</div>
+    <div class="ref-body">
+      <div class="ref-title">Dune: Part Two</div>
+      <div class="ref-meta">
+        Denis Villeneuve · 2024 · Estados Unidos / Canada<br>
+        <em>Warner Bros. Pictures / Legendary Pictures</em>
+      </div>
+      <div class="ref-full">
+        <strong>Cita MLA:</strong><br>
+        Villeneuve, Denis, dir. <em>Dune: Part Two.</em> Warner Bros. Pictures / Legendary Pictures, 2024.<br><br>
+        <strong>Basada en:</strong> Novela <em>Dune</em> de Frank Herbert (1965), segunda mitad.<br>
+        <strong>Guión:</strong> Denis Villeneuve y Jon Spaihts.<br>
+        <strong>Fotografía:</strong> Greig Fraser.<br>
+        <strong>Música:</strong> Hans Zimmer.<br>
+        <strong>Reparto principal:</strong> Timothée Chalamet, Zendaya, Rebecca Ferguson, Austin Butler, Florence Pugh, Javier Bardem, Josh Brolin.<br>
+        <strong>Puntaje RT:</strong> 93% · <strong>Metacritic:</strong> 78/100.
+      </div>
+      <div class="ref-tags">
+        <span class="tag genre">Ciencia ficción épica</span>
+        <span class="tag genre">Aventura</span>
+        <span class="tag">EE.UU. · 2024</span>
+        <span class="tag">166 min.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-num">05</div>
+    <div class="ref-body">
+      <div class="ref-title">Killers of the Flower Moon</div>
+      <div class="ref-meta">
+        Martin Scorsese · 2023 · Estados Unidos<br>
+        <em>Apple Original Films / Imperative Entertainment / Sikelia Productions</em>
+      </div>
+      <div class="ref-full">
+        <strong>Cita MLA:</strong><br>
+        Scorsese, Martin, dir. <em>Killers of the Flower Moon.</em> Apple Original Films / Paramount Pictures, 2023.<br><br>
+        <strong>Basada en:</strong> Libro de no ficción <em>Killers of the Flower Moon: The Osage Murders and the Birth of the FBI</em> de David Grann (2017).<br>
+        <strong>Guión:</strong> Eric Roth y Martin Scorsese.<br>
+        <strong>Fotografía:</strong> Rodrigo Prieto.<br>
+        <strong>Música:</strong> Robbie Robertson.<br>
+        <strong>Reparto principal:</strong> Leonardo DiCaprio, Robert De Niro, Lily Gladstone, Jesse Plemons.<br>
+        <strong>Reconocimientos:</strong> 10 nominaciones al Oscar 2024. Lily Gladstone: primera actriz nativa americana nominada al Oscar a Mejor Actriz.<br>
+        <strong>Puntaje RT:</strong> 93% · <strong>Metacritic:</strong> 89/100.
+      </div>
+      <div class="ref-tags">
+        <span class="tag genre">Drama histórico</span>
+        <span class="tag genre">Crimen</span>
+        <span class="tag">EE.UU. · 2023</span>
+        <span class="tag">206 min.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-num">06</div>
+    <div class="ref-body">
+      <div class="ref-title">Oppenheimer</div>
+      <div class="ref-meta">
+        Christopher Nolan · 2023 · Estados Unidos / Reino Unido<br>
+        <em>Universal Pictures / Syncopy Inc.</em>
+      </div>
+      <div class="ref-full">
+        <strong>Cita MLA:</strong><br>
+        Nolan, Christopher, dir. <em>Oppenheimer.</em> Universal Pictures / Syncopy, 2023.<br><br>
+        <strong>Basada en:</strong> Biografía <em>American Prometheus: The Triumph and Tragedy of J. Robert Oppenheimer</em> de Kai Bird y Martin J. Sherwin (2005).<br>
+        <strong>Guión:</strong> Christopher Nolan.<br>
+        <strong>Fotografía:</strong> Hoyte van Hoytema (IMAX film).<br>
+        <strong>Música:</strong> Ludwig Göransson.<br>
+        <strong>Reparto principal:</strong> Cillian Murphy, Robert Downey Jr., Emily Blunt, Matt Damon, Florence Pugh, Josh Hartnett.<br>
+        <strong>Galardones:</strong> 7 premios Oscar 2024 incluidos Mejor Película, Mejor Director, Mejor Actor (Cillian Murphy) y Mejor Actor de Reparto (Robert Downey Jr.).<br>
+        <strong>Puntaje RT:</strong> 93% · <strong>Metacritic:</strong> 88/100.
+      </div>
+      <div class="ref-tags">
+        <span class="tag genre">Biopic</span>
+        <span class="tag genre">Drama histórico</span>
+        <span class="tag award">7 Oscars 2024</span>
+        <span class="tag">EE.UU. · 2023</span>
+        <span class="tag">180 min.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-num">07</div>
+    <div class="ref-body">
+      <div class="ref-title">Past Lives</div>
+      <div class="ref-meta">
+        Celine Song · 2023 · Estados Unidos / Corea del Sur<br>
+        <em>A24 / justSo</em>
+      </div>
+      <div class="ref-full">
+        <strong>Cita MLA:</strong><br>
+        Song, Celine, dir. <em>Past Lives.</em> A24 / justSo, 2023.<br><br>
+        <strong>Guión:</strong> Celine Song (historia semi-autobiográfica).<br>
+        <strong>Fotografía:</strong> Shabier Kirchner.<br>
+        <strong>Música:</strong> Christopher Bear y Daniel Rossen (Grizzly Bear).<br>
+        <strong>Reparto principal:</strong> Greta Lee, Teo Yoo, John Magaro.<br>
+        <strong>Idiomas:</strong> Inglés y coreano (과거의 삶 / 지난 생애들).<br>
+        <strong>Galardones:</strong> 2 nominaciones al Oscar 2024 (Mejor Película, Mejor Guión Original). Ganadora en National Board of Review 2023.<br>
+        <strong>Puntaje RT:</strong> 96% · <strong>Metacritic:</strong> 91/100.
+      </div>
+      <div class="ref-tags">
+        <span class="tag genre">Drama romántico</span>
+        <span class="tag genre">Ópera prima</span>
+        <span class="tag">EE.UU. / Corea · 2023</span>
+        <span class="tag">106 min.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-num">08</div>
+    <div class="ref-body">
+      <div class="ref-title">Poor Things</div>
+      <div class="ref-meta">
+        Yorgos Lanthimos · 2023 · Reino Unido / Irlanda / EE.UU.<br>
+        <em>Searchlight Pictures / Film4 / Element Pictures</em>
+      </div>
+      <div class="ref-full">
+        <strong>Cita MLA:</strong><br>
+        Lanthimos, Yorgos, dir. <em>Poor Things.</em> Searchlight Pictures / Film4, 2023.<br><br>
+        <strong>Basada en:</strong> Novela <em>Poor Things</em> de Alasdair Gray (1992).<br>
+        <strong>Guión:</strong> Tony McNamara.<br>
+        <strong>Fotografía:</strong> Robbie Ryan.<br>
+        <strong>Diseño de producción:</strong> Shona Heath y James Price.<br>
+        <strong>Música:</strong> Jerskin Fendrix.<br>
+        <strong>Reparto principal:</strong> Emma Stone, Mark Ruffalo, Willem Dafoe, Ramy Youssef.<br>
+        <strong>Galardones:</strong> León de Oro — Mostra de Venecia 2023. 4 premios Oscar 2024 (Mejor Actriz: Emma Stone; Diseño de Producción; Vestuario; Maquillaje).<br>
+        <strong>Puntaje RT:</strong> 89% · <strong>Metacritic:</strong> 84/100.
+      </div>
+      <div class="ref-tags">
+        <span class="tag genre">Ciencia ficción gótica</span>
+        <span class="tag genre">Comedia negra</span>
+        <span class="tag award">León de Oro Venecia 2023</span>
+        <span class="tag award">4 Oscars 2024</span>
+        <span class="tag">2023 · 141 min.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-num">09</div>
+    <div class="ref-body">
+      <div class="ref-title">Society of the Snow</div>
+      <div class="ref-meta">
+        J.A. Bayona · 2023 · España / Uruguay<br>
+        <em>Netflix / Apaches Entertainment</em>
+      </div>
+      <div class="ref-full">
+        <strong>Cita MLA:</strong><br>
+        Bayona, J.A. (Juan Antonio García Bayona), dir. <em>Society of the Snow (La sociedad de la nieve).</em> Netflix / Apaches Entertainment, 2023.<br><br>
+        <strong>Basada en:</strong> Libro <em>La sociedad de la nieve</em> de Pablo Vierci (2008), sobre el accidente aéreo de los Andes de 1972.<br>
+        <strong>Guión:</strong> J.A. Bayona, Bernat Vilaplana, Jaime Marques y Nicolás Casariego.<br>
+        <strong>Fotografía:</strong> Pedro Luque.<br>
+        <strong>Música:</strong> Michael Giacchino.<br>
+        <strong>Idiomas:</strong> Español (rioplatense).<br>
+        <strong>Galardones:</strong> Representante de España en los Oscar 2024 (Mejor Película Internacional).<br>
+        <strong>Puntaje RT:</strong> 90%.
+      </div>
+      <div class="ref-tags">
+        <span class="tag genre">Drama de supervivencia</span>
+        <span class="tag genre">Basada en hechos reales</span>
+        <span class="tag">España / Uruguay · 2023</span>
+        <span class="tag">144 min.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-num">10</div>
+    <div class="ref-body">
+      <div class="ref-title">The Substance</div>
+      <div class="ref-meta">
+        Coralie Fargeat · 2024 · Francia / Reino Unido<br>
+        <em>MUBI / Working Title Films / Tim Bevan / Eric Fellner</em>
+      </div>
+      <div class="ref-full">
+        <strong>Cita MLA:</strong><br>
+        Fargeat, Coralie, dir. <em>The Substance.</em> MUBI / Working Title Films, 2024.<br><br>
+        <strong>Guión:</strong> Coralie Fargeat.<br>
+        <strong>Fotografía:</strong> Benjamin Kračun.<br>
+        <strong>Música:</strong> Raffertie.<br>
+        <strong>Reparto principal:</strong> Demi Moore, Margaret Qualley, Dennis Quaid.<br>
+        <strong>Galardones:</strong> Premio al Mejor Guión — Festival de Cannes 2024.<br>
+        <strong>Puntaje RT:</strong> 91% · <strong>Metacritic:</strong> 72/100.
+      </div>
+      <div class="ref-tags">
+        <span class="tag genre">Terror corporal</span>
+        <span class="tag genre">Sátira</span>
+        <span class="tag award">Premio Guión Cannes 2024</span>
+        <span class="tag">Francia · 2024</span>
+        <span class="tag">140 min.</span>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="footer-note">
+  <p>
+    <strong>Aviso de propiedad intelectual.</strong> CineReview es un sitio de crítica cinematográfica independiente.
+    Todos los análisis, textos editoriales y reseñas son de autoría propia y no reproducen material con copyright.
+    Los títulos, nombres de directores, actores y datos de producción son información factual de dominio público.
+  </p>
+  <p>
+    Las imágenes de actores y fotogramas utilizadas en las reseñas individuales son propiedad de sus respectivas
+    productoras y distribuidoras, y se reproducen únicamente con fines informativos y críticos al amparo de
+    la doctrina del uso legítimo (<em>fair use</em>, 17 U.S.C. § 107) y el derecho de cita en el marco de
+    la crítica cultural (Art. 32 LPI, España).
+  </p>
+  <p>
+    Los puntajes de Rotten Tomatoes™ y Metacritic™ son marcas de sus respectivos propietarios:
+    Fandango Media, LLC y CBS Interactive Inc. Los puntajes consignados corresponden a la fecha de publicación de cada reseña.
+  </p>
+  <p style="margin-top:1rem; color: #3a3733;">
+    © CineReview · Documento de referencias generado para uso académico y editorial · Formato MLA 9ª edición.
+  </p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Anatomy of a Fall — CineReview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@100;300;400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #080b11;
+      --surface: #0f1523;
+      --card:    #161e31;
+      --border:  rgba(255, 255, 255, 0.08);
+      --ice:     #7dd3fc;
+      --snow:    #f8fafc;
+      --blood:   #be123c;
+      --text:    #e2e8f0;
+      --muted:   #94a3b8;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    #cur {
+      width: 10px; height: 10px;
+      background: var(--snow);
+      position: fixed; pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%);
+      border-radius: 50%;
+      transition: width .2s, height .2s, background .2s;
+      mix-blend-mode: difference;
+    }
+    #cur.h { 
+      width: 36px; height: 36px; background: transparent; 
+      border: 1px solid var(--ice); mix-blend-mode: normal;
+      box-shadow: 0 0 15px rgba(125, 211, 252, 0.3);
+    }
+
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9000;
+      background: radial-gradient(circle at 50% 0%, rgba(125, 211, 252, 0.05), transparent 50%),
+                  url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    }
+
+    nav {
+      position: fixed; top: 0; width: 100%; z-index: 200;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 3rem;
+      background: linear-gradient(to bottom, rgba(8, 11, 17, 0.95) 0%, rgba(8, 11, 17, 0) 100%);
+    }
+    .nav-logo {
+      font-family: 'Lora', serif; font-weight: 600;
+      font-size: 1.4rem; color: var(--snow); text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+    .nav-logo span { font-weight: 400; color: var(--ice); font-style: italic;}
+    .nav-back {
+      font-family: 'JetBrains Mono', monospace; font-size: .7rem; letter-spacing: .1em; 
+      text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color .3s;
+    }
+    .nav-back:hover { color: var(--snow); }
+
+    .hero {
+      min-height: 100vh; position: relative;
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 0 3rem; overflow: hidden; text-align: center;
+      align-items: center;
+    }
+
+    #snowCanvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+    
+    .hero-grad {
+      position: absolute; inset: 0; z-index: 1;
+      background: radial-gradient(ellipse at 50% 40%, transparent 20%, var(--bg) 80%),
+                  linear-gradient(to top, var(--bg) 0%, transparent 30%);
+    }
+
+    .hero-content { position: relative; z-index: 2; max-width: 900px; margin-top: 5rem; }
+    
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace; font-size: .75rem; letter-spacing: .3em; 
+      text-transform: uppercase; color: var(--ice); margin-bottom: 1.5rem; display: block;
+    }
+
+    h1.hero-title {
+      font-family: 'Lora', serif; font-size: clamp(3rem, 7vw, 5.5rem);
+      font-weight: 500; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 0.5rem;
+      color: var(--snow);
+    }
+    h1.hero-title em { font-style: italic; color: var(--ice); font-weight: 400;}
+
+    .hero-subtitle {
+      font-size: .95rem; letter-spacing: .2em; text-transform: uppercase; 
+      color: var(--muted); margin-bottom: 3rem; font-weight: 300;
+    }
+
+    .score-strip { 
+      display: flex; align-items: center; justify-content: center; gap: 3rem; 
+      margin-bottom: 3rem; padding-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.05);
+      position: relative;
+    }
+    .score-strip::before {
+      content: ''; position: absolute; top: -1px; left: 20%; right: 20%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--ice), transparent); opacity: 0.3;
+    }
+
+    .score-big { display: flex; align-items: baseline; gap: .3rem; }
+    .score-big .n { font-family: 'Lora', serif; font-size: 4rem; color: var(--snow); line-height: 1; font-weight: 500;}
+    .score-big .d { font-family: 'JetBrains Mono', monospace; color: var(--muted); font-size: 1rem; }
+    .stars { display:flex; gap:5px; }
+    .star  { font-size: 1.2rem; color: var(--ice); }
+
+    .meta-pills { display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; }
+    .pill {
+      font-family: 'JetBrains Mono', monospace; padding: .4rem 1.2rem; border-radius: 2px;
+      font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
+      border: 1px solid var(--border); color: var(--muted);
+      background: rgba(255,255,255,0.02); backdrop-filter: blur(5px);
+    }
+    .pill.red { border-color: rgba(190, 18, 60, 0.4); color: var(--blood); }
+
+    .stats-band {
+      background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      padding: 4rem 3rem; position: relative; z-index: 2;
+    }
+    .stats-inner {
+      max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(5,1fr); gap: 1.5rem; text-align: center;
+    }
+    .sv { font-family:'Lora',serif; font-size:3rem; color:var(--snow); display:block; line-height:1; margin-bottom: 0.5rem; font-weight: 500;}
+    .sl { font-family: 'JetBrains Mono', monospace; font-size:.65rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ice); display:block; }
+
+    main { position: relative; z-index: 2; }
+    section.cs { max-width: 1200px; margin: 0 auto; padding: 6rem 3rem; }
+
+    .sec-lbl {
+      font-family: 'JetBrains Mono', monospace; font-size: .7rem; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;
+    }
+    .sec-lbl::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    h2.bt {
+      font-family: 'Lora', serif; font-size: clamp(2rem,3.5vw,3rem);
+      font-weight: 500; line-height: 1.2; color: var(--snow); margin-bottom: 2.5rem;
+    }
+    h2.bt em { color: var(--ice); font-style: italic; font-weight: 400;}
+
+    hr.div { max-width:1200px; margin:0 auto; border:none; border-top:1px solid var(--border); opacity: 0.5; }
+
+    .syn-grid { display:grid; grid-template-columns:1fr 380px; gap:5rem; align-items:start; }
+
+    .body-text { font-size: 1.1rem; line-height: 1.9; color: rgba(226, 232, 240, 0.85); font-weight: 300;}
+    .body-text p + p { margin-top:1.5rem; }
+    .dropcap { float: left; font-family: 'Lora', serif; font-weight: 600; font-size: 4rem; line-height: 0.8; padding-top: 8px; padding-right: 12px; color: var(--ice); }
+
+    .poster-wrap { position:sticky; top:7rem; }
+    .poster {
+      width:100%; aspect-ratio:2/3; background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%); 
+      border: 1px solid var(--border); position:relative; overflow:hidden; 
+      display:flex; flex-direction: column; align-items:center; justify-content:center;
+    }
+    .poster::after {
+      content: ''; position: absolute; bottom: -50px; right: -50px; width: 150px; height: 150px;
+      background: radial-gradient(circle, rgba(190,18,60,0.4), transparent 70%); filter: blur(20px);
+    }
+    .poster-inner { position:relative; z-index:1; text-align:center; padding:1.5rem; }
+    .poster-inner .big { font-family:'Lora',serif; font-size:2.5rem; color:var(--bg); line-height:1.1; font-weight: 600; text-transform: uppercase;}
+    .poster-inner .big em { color: var(--blood); font-style: italic; }
+    .poster-inner .sm { font-family:'JetBrains Mono', monospace; font-size:.65rem; letter-spacing:.15em; text-transform:uppercase; color:var(--bg); margin-top:1rem; display:block; font-weight: 600; opacity: 0.7;}
+
+    .info-table { margin-top:2rem; }
+    .ir { display:flex; justify-content:space-between; align-items:center; padding:.8rem 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+    .ir:last-child { border:none; }
+    .ik { font-family:'JetBrains Mono', monospace; font-size:.65rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+    .iv { font-size:.85rem; color:var(--text); font-weight: 400;}
+
+    .vl-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; margin-top:2rem; }
+    .vl-card {
+      background:var(--card); border:1px solid var(--border); padding:2rem 1.8rem;
+      position: relative; transition:all .3s; border-radius: 2px;
+    }
+    .vl-card:hover { transform:translateY(-5px); border-color:var(--ice); background: var(--surface); }
+    .vl-icon { font-size:2rem; margin-bottom:1.2rem; display:block; filter: grayscale(1) brightness(1.5); }
+    .vl-title { font-family:'Lora',serif; font-size:1.2rem; margin-bottom:.8rem; color: var(--snow); font-weight: 500;}
+    .vl-body { font-size:.9rem; color:var(--muted); line-height:1.7; }
+    
+    .cast-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:1.5rem; margin-top:2rem; }
+    .cast-card {
+      background:var(--surface); border:1px solid var(--border); border-radius: 2px; overflow: hidden;
+      transition:all .3s; cursor: none; text-align: center; padding-bottom: 1.2rem;
+    }
+    .cast-card:hover { border-color: var(--ice); transform: translateY(-3px);}
+    .cast-photo {
+      height:200px; display:flex; align-items:center; justify-content:center;
+      background: linear-gradient(to bottom, #1e293b, #0f1523);
+      font-family:'Lora',serif; font-size:3rem; color: rgba(255,255,255,0.05); font-style: italic;
+      border-bottom: 1px solid var(--border); margin-bottom: 1rem; overflow: hidden;
+    }
+    .cast-photo img {
+      width: 100%; height: 100%; object-fit: cover; filter: grayscale(50%) contrast(110%);
+    }
+    .cast-name { font-family:'Lora',serif; font-weight: 500; font-size:1.05rem; margin-bottom:.3rem; color: var(--snow); }
+    .cast-role { font-family:'JetBrains Mono',monospace; font-size:.65rem; color:var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .review-wrap {
+      background:var(--surface); border:1px solid var(--border); padding:4rem; position:relative; overflow:hidden; border-radius: 2px;
+    }
+    .review-wrap::before {
+      content: '?'; position: absolute; top: -2rem; right: 1rem; 
+      font-family:'Lora',serif; font-weight: 400; font-size: 15rem; color: rgba(255,255,255,0.02); line-height: 1; pointer-events: none; font-style: italic;
+    }
+    
+    .review-top { display:flex; align-items:center; gap:2rem; margin-bottom:2.5rem; }
+    .score-ring {
+      width:80px; height:80px; border:2px solid var(--ice); flex-shrink:0;
+      display:flex; align-items:center; justify-content:center; border-radius: 50%;
+    }
+    .score-ring-inner { font-family:'Lora',serif; font-weight: 500; font-size:2rem; color:var(--snow); }
+    .review-verdict { font-family:'Lora',serif; font-weight: 500; font-size:1.6rem; color: var(--snow); }
+    .review-verdict em { color:var(--blood); font-style: italic; font-weight: 400;}
+    .review-by { font-family:'JetBrains Mono',monospace; font-size:.65rem; color:var(--muted); margin-top:.5rem; text-transform: uppercase; letter-spacing: .05em; }
+
+    .review-body { font-size:1.1rem; line-height:1.9; color:rgba(226, 232, 240, 0.85); font-weight: 300; }
+    .review-body p + p { margin-top:1.5rem; }
+    .pull {
+      padding:1.5rem 2rem; margin:2.5rem 0; background: rgba(255,255,255,0.02); border-left: 2px solid var(--blood);
+      font-family: 'Lora', serif; font-size:1.35rem; color:var(--snow); line-height:1.5; font-style: italic;
+    }
+
+    .comments-list { display:flex; flex-direction:column; gap:1.2rem; margin-bottom:4rem; }
+    .cmnt {
+      background:var(--surface); border:1px solid var(--border); padding:1.8rem; border-radius: 2px;
+      transition: border-color .3s;
+    }
+    .cmnt:hover { border-color: rgba(125, 211, 252, 0.3); }
+    .cmnt-hd { display:flex; align-items:center; gap:1rem; margin-bottom:1rem; }
+    .av {
+      width:40px; height:40px; background:var(--card); border: 1px solid var(--border);
+      display:flex; align-items:center; justify-content:center; border-radius: 50%;
+      font-family: 'Lora', serif; font-weight: 500; font-style: italic; font-size:1rem; color:var(--ice); flex-shrink:0;
+    }
+    .cmnt-name { font-weight: 500; font-size:.95rem; color:var(--snow); }
+    .cmnt-date { font-family:'JetBrains Mono',monospace; font-size:.65rem; color:var(--muted); margin-top: 0.2rem; letter-spacing: .05em; text-transform: uppercase;}
+    .cmnt-stars { margin-left:auto; color:var(--ice); font-size:1rem; }
+    .cmnt-body { font-size:.95rem; color:var(--muted); line-height:1.7; }
+
+    .cf { background:var(--surface); border:1px solid var(--border); padding:3rem; border-radius: 2px;}
+    .cf h3 { font-family:'Lora',serif; font-weight: 500; font-size:1.5rem; margin-bottom:2rem; color: var(--snow); font-style: italic;}
+    .cf-row { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+    .cf-grp { display:flex; flex-direction:column; gap:.6rem; }
+    .cf-grp label { font-family:'JetBrains Mono',monospace; font-size:.65rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+    .cf-grp input, .cf-grp textarea {
+      background:var(--bg); border:1px solid var(--border); color:var(--text);
+      padding:1rem 1.2rem; font-family:'Inter',sans-serif; font-size:.9rem; border-radius: 2px;
+      outline:none; transition:all .3s; resize:vertical;
+    }
+    .cf-grp input:focus, .cf-grp textarea:focus { border-color:var(--ice); background: rgba(255,255,255,0.02);}
+    .cf-stars { display:flex; gap:.4rem; margin-top:.2rem; }
+    .cf-star { font-size:1.4rem; cursor:none; color:rgba(255,255,255,0.1); transition:color .2s; }
+    .cf-star.on { color:var(--ice); }
+    .cf-foot { display:flex; justify-content:flex-end; margin-top:2rem; }
+    
+    .btn {
+      display:inline-flex; align-items:center; justify-content: center; padding:.8rem 2rem; 
+      background: transparent; color:var(--snow); border: 1px solid var(--ice); border-radius: 2px;
+      font-family:'JetBrains Mono',monospace; cursor:none; font-size:.75rem; letter-spacing:.1em; 
+      text-transform:uppercase; transition:all .3s;
+    }
+    .btn:hover { background:var(--ice); color:var(--bg); }
+
+    #toast {
+      position:fixed; bottom:2rem; right:2rem; z-index:500;
+      background:var(--ice); color:var(--bg); font-weight: 500; border-radius: 2px;
+      padding:1rem 2rem; font-size:.85rem; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.05em;
+      transform:translateY(80px); opacity:0;
+      transition:all .4s cubic-bezier(.175, .885, .32, 1.275); pointer-events:none;
+    }
+    #toast.show { transform:translateY(0); opacity:1; }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+    .fu { opacity:0; animation:fadeUp 1s ease forwards; }
+    .d1{animation-delay:.15s} .d2{animation-delay:.3s} .d3{animation-delay:.45s} .d4{animation-delay:.6s}
+
+    @media(max-width:900px){
+      nav,.hero,.stats-band{padding-left:1.5rem;padding-right:1.5rem;}
+      section.cs{padding-left:1.5rem;padding-right:1.5rem; padding-top: 4rem; padding-bottom: 4rem;}
+      .syn-grid,.cf-row{grid-template-columns:1fr;}
+      .poster-wrap{position:static;max-width:280px; margin: 0 auto;}
+      .stats-inner,.vl-grid{grid-template-columns:repeat(2,1fr);}
+      h1.hero-title { font-size: 3rem; }
+    }
+    @media(max-width:500px){
+      .stats-inner{grid-template-columns:1fr;}
+      .vl-grid{grid-template-columns:1fr;}
+      .score-strip { flex-direction: column; gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="cur"></div>
+
+<nav>
+  <a href="index.html" class="nav-logo">Cine<span>Review</span></a>
+  <a href="index.html" class="nav-back">← Volver al inicio</a>
+</nav>
+
+<section class="hero">
+  <canvas id="snowCanvas"></canvas>
+  <div class="hero-grad"></div>
+
+  <div class="hero-content">
+    <span class="eyebrow fu">Thriller · Drama Judicial · 2023</span>
+    <h1 class="hero-title fu d1">Anatomy of <br><em>a Fall</em></h1>
+    <p class="hero-subtitle fu d2">Justine Triet · Les Films Pelléas / Neon</p>
+    
+    <div class="score-strip fu d3">
+      <div class="score-big">
+        <span class="n">8.4</span><span class="d">/10</span>
+      </div>
+      <div>
+        <div class="stars">★★★★<span style="color: rgba(125, 211, 252, 0.3);">★</span></div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:.6rem; color:var(--muted); margin-top:.4rem; letter-spacing:.1em; text-transform:uppercase;">Puntuación Editorial</div>
+      </div>
+    </div>
+    
+    <div class="meta-pills fu d4">
+      <span class="pill">152 MIN</span>
+      <span class="pill">PALMA DE ORO (CANNES)</span>
+      <span class="pill">5 NOMS. OSCAR</span>
+      <span class="pill red">¿ACCIDENTE O ASESINATO?</span>
+    </div>
+  </div>
+</section>
+
+<div class="stats-band">
+  <div class="stats-inner">
+    <div><span class="sv" data-t="35">0</span><span class="sl">Millones Taquilla</span></div>
+    <div><span class="sv" data-t="5">0</span><span class="sl">Nominaciones Oscar</span></div>
+    <div><span class="sv" data-t="1">0</span><span class="sl">Oscar Mejor Guión Original</span></div>
+    <div><span class="sv" data-t="96">0</span><span class="sl">% Rotten Tomatoes</span></div>
+    <div><span class="sv" data-t="152">0</span><span class="sl">Minutos de duración</span></div>
+  </div>
+</div>
+
+<main>
+
+  <section class="cs">
+    <div class="syn-grid">
+      <div>
+        <div class="sec-lbl">El Incidente</div>
+        <h2 class="bt">La caída no es el fin, <em>es el principio.</em></h2>
+        <div class="body-text">
+          <p><span class="dropcap">S</span>andra, una escritora alemana, vive con su esposo francés Samuel y su hijo con discapacidad visual, Daniel, en un chalé remoto en los Alpes franceses. La tranquilidad de su aislamiento se rompe abruptamente cuando Samuel es encontrado muerto en la nieve debajo de su casa, con un traumatismo craneal masivo.</p>
+          <p>La policía rápidamente descarta el accidente. Las sospechas recaen inmediatamente sobre Sandra, quien es acusada de asesinato. Durante el intenso y prolongado juicio que sigue, su relación tumultuosa y llena de resentimientos es diseccionada públicamente frente a los tribunales, los medios y, lo que es más devastador, frente a su propio hijo, quien se convierte en el testigo clave del caso.</p>
+          <p>La directora Justine Triet utiliza el formato del drama judicial no para encontrar una verdad objetiva, sino para exponer lo imposible que resulta conocer realmente la vida íntima de una pareja. <em>Anatomy of a Fall</em> no es solo sobre cómo murió un hombre, sino sobre cómo colapsó un matrimonio.</p>
+        </div>
+      </div>
+
+      <div class="poster-wrap">
+        <div class="poster">
+          <div class="poster-inner">
+            <span class="big">ANATOMY</span><br>
+            <span class="big" style="font-size: 1.5rem; letter-spacing: 0.2em; color: var(--muted);">OF A</span><br>
+            <span class="big"><em>FALL</em></span>
+            <span class="sm">Justine Triet</span>
+          </div>
+        </div>
+        <div class="info-table">
+          <div class="ir"><span class="ik">Directora</span><span class="iv">Justine Triet</span></div>
+          <div class="ir"><span class="ik">Guión</span><span class="iv">J. Triet, Arthur Harari</span></div>
+          <div class="ir"><span class="ik">Fotografía</span><span class="iv">Simon Beaufils</span></div>
+          <div class="ir"><span class="ik">Edición</span><span class="iv">Laurent Sénéchal</span></div>
+          <div class="ir"><span class="ik">Idioma</span><span class="iv">Francés / Inglés / Alemán</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div"/>
+
+  <section class="cs" style="padding-top:5rem;padding-bottom:5rem;">
+    <div class="sec-lbl">Diseño de la Duda</div>
+    <h2 class="bt">La <em>ambigüedad</em> como herramienta narrativa</h2>
+    <div class="vl-grid">
+      <div class="vl-card">
+        <span class="vl-icon">⚖️</span>
+        <div class="vl-title">Juicio a la Intimidad</div>
+        <div class="vl-body">El tribunal francés sirve como un escenario donde la literatura de Sandra, sus discusiones grabadas en secreto y sus infidelidades son utilizadas como armas. La película nos hace cuestionar si estamos juzgando un crimen o castigando a una mujer por no encajar en el rol de "buena esposa".</div>
+      </div>
+      <div class="vl-card">
+        <span class="vl-icon">🐕</span>
+        <div class="vl-title">La Mirada de Daniel y Snoop</div>
+        <div class="vl-body">La perspectiva de la película a menudo se alinea con la del hijo ciego, Daniel, y su perro guía, Snoop. Nosotros, como espectadores, estamos tan ciegos a la verdad absoluta como él, obligados a "decidir" qué historia creer.</div>
+      </div>
+      <div class="vl-card">
+        <span class="vl-icon">🎵</span>
+        <div class="vl-title">El Sonido de la Fricción</div>
+        <div class="vl-body">La música es diegética (ocurre dentro de la escena). La estruendosa versión instrumental de "P.I.M.P." de 50 Cent que Samuel pone a todo volumen antes de morir se convierte en un arma auditiva que establece la hostilidad pasivo-agresiva del matrimonio.</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div"/>
+
+  <section class="cs" style="padding-top:5rem;padding-bottom:5rem;">
+    <div class="sec-lbl">El Reparto</div>
+    <h2 class="bt">Rostros que <em>ocultan</em> más de lo que muestran</h2>
+    <div class="cast-grid" id="castGrid"></div>
+  </section>
+
+  <hr class="div"/>
+
+  <section class="cs" style="padding-top:5rem;padding-bottom:5rem;">
+    <div class="sec-lbl">Veredicto Final</div>
+    <div class="review-wrap">
+      <div class="review-top">
+        <div class="score-ring"><div class="score-ring-inner">8.4</div></div>
+        <div>
+          <div class="review-verdict">Un puzzle fascinante <em>sin piezas correctas</em></div>
+          <div class="review-by">Equipo Editorial CineReview · 15 Noviembre 2023</div>
+        </div>
+      </div>
+      <div class="review-body">
+        <p>El mayor triunfo de Justine Triet en <em>Anatomy of a Fall</em> es convencernos de que resolver el misterio es lo menos importante de la película. Si usted entra buscando un thriller policíaco tradicional a lo Agatha Christie o <em>Law & Order</em>, saldrá frustrado. Esto es un estudio forense de las relaciones humanas.</p>
+
+        <div class="pull">"La película postula una idea aterradora: si nuestra vida privada fuera diseccionada frente a un jurado de extraños, cualquiera de nosotros podría parecer un monstruo."</div>
+
+        <p>Sandra Hüller ofrece una actuación maestra, fría y calculada. Su personaje nunca nos ruega que la amemos o que le creamos, simplemente nos exige que la escuchemos. La escena de la discusión matrimonial grabada en audio es, sin exagerar, una de las piezas de diálogo y actuación más tensas y reales de la década.</p>
+
+        <p>El joven Milo Machado Graner (Daniel) es el ancla moral de la cinta. Su dilema —tener que elegir creerle a su madre cuando la certeza es imposible— es la verdadera tragedia de la caída.</p>
+
+        <p>Brillante, clínica y exhaustiva, esta película te dejará discutiendo con tus acompañantes horas después de haber salido del cine, no sobre quién lo hizo, sino sobre qué constituye realmente la "verdad".</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div"/>
+
+  <section class="cs" style="padding-top:5rem;padding-bottom:5rem;">
+    <div class="sec-lbl">El Tribunal del Público</div>
+    <h2 class="bt" style="margin-bottom:3rem;">Veredicto de <em>la Audiencia</em></h2>
+    
+    <div class="comments-list" id="commentsList"></div>
+    
+    <div class="cf">
+      <h3>Emite tu Veredicto</h3>
+      <div class="cf-row">
+        <div class="cf-grp">
+          <label>Nombre</label>
+          <input type="text" id="cfName" placeholder="Tu nombre..."/>
+        </div>
+        <div class="cf-grp">
+          <label>Calificación</label>
+          <div class="cf-stars" id="cfStars">
+            <span class="cf-star" data-v="1">★</span>
+            <span class="cf-star" data-v="2">★</span>
+            <span class="cf-star" data-v="3">★</span>
+            <span class="cf-star" data-v="4">★</span>
+            <span class="cf-star" data-v="5">★</span>
+          </div>
+        </div>
+      </div>
+      <div class="cf-grp" style="margin-bottom:1rem;">
+        <label>Análisis</label>
+        <textarea id="cfText" rows="4" placeholder="¿Culpable o inocente? Justifica tu respuesta..."></textarea>
+      </div>
+      <div class="cf-foot">
+        <button class="btn" onclick="submitCF()">Publicar Reseña</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer style="border-top:1px solid var(--border);padding:3rem 3rem;text-align:center;background:var(--bg);">
+  <span style="font-family:'Lora',serif;font-weight: 500; font-size:1.5rem;color:var(--snow);display:block;margin-bottom:.5rem;">Cine<span style="color:var(--ice);font-style: italic;">Review</span></span>
+  <p style="font-family:'JetBrains Mono',monospace; font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing: .1em;">© 2025 CineReview · La verdad es una ilusión</p>
+</footer>
+
+<div id="toast">Reseña publicada con éxito</div>
+
+<script>
+const cast = [
+  { name:"Sandra Hüller", role:"Sandra Voyter", archivo:"sandra huller.jpg", init:"SH" },
+  { name:"Swann Arlaud",  role:"Vincent Renzi", archivo:"swann arlaud.jpeg", init:"SA" },
+  { name:"Milo Machado Graner", role:"Daniel",  archivo:"milo machado graner.jpeg", init:"MM" },
+  { name:"Antoine Reinartz", role:"El Fiscal",  archivo:"antoine reinartz.jpeg", init:"AR" },
+  { name:"Samuel Theis",  role:"Samuel Maleski", archivo:"samuel theis.jpeg", init:"ST" },
+  { name:"Messi",         role:"Snoop (El perro)", archivo:"messi(perro).jpeg", init:"MS" }
+];
+
+let comments = [
+  { name:"Elena R.", init:"ER", rating:5, date:"HACE 3 DÍAS", text:"Sigo pensando en ella. La discusión de la pelea es brutalmente realista. Sandra Hüller estuvo robada en los Oscars, merecía la estatuilla." },
+  { name:"Javier M.", init:"JM", rating:4, date:"HACE 1 SEMANA", text:"Un guion perfecto. Me encantó cómo el fiscal intenta usar las novelas de ella como prueba de asesinato. Una crítica genial al sistema judicial." },
+  { name:"Patricia L.", init:"PL", rating:5, date:"HACE 2 SEMANAS", text:"Yo creo que es inocente, pero la magia de la película es que te hace dudar hasta el último segundo. Y el perro, Messi, es el mejor actor secundario del año." },
+];
+
+let cfRating = 0;
+
+document.getElementById('castGrid').innerHTML = cast.map(c => `
+  <div class="cast-card">
+    <div class="cast-photo">
+      <img src="imagenes/Anatomy of a Fall/${encodeURIComponent(c.archivo)}" alt="Foto de ${c.name}"
+           onerror="if(!this.dataset.r1){this.dataset.r1=true; this.src='imagenes/Anatomy of a Fall/${encodeURIComponent(c.archivo.replace('.jpg','.jpeg'))}';}
+                    else if(!this.dataset.r2){this.dataset.r2=true; this.src='imagenes/Anatomy of a Fall/${encodeURIComponent(c.archivo.replace('.jpeg','.jpg'))}';}">
+    </div>
+    <div class="cast-name">${c.name}</div>
+    <div class="cast-role">${c.role}</div>
+  </div>
+`).join('');
+
+function renderComments() {
+  document.getElementById('commentsList').innerHTML = comments.map(c => `
+    <div class="cmnt">
+      <div class="cmnt-hd">
+        <div class="av">${c.init}</div>
+        <div>
+          <div class="cmnt-name">${c.name}</div>
+          <div class="cmnt-date">${c.date}</div>
+        </div>
+        <div class="cmnt-stars">${'★'.repeat(c.rating)}${'☆'.repeat(5-c.rating)}</div>
+      </div>
+      <p class="cmnt-body">${c.text}</p>
+    </div>
+  `).join('');
+}
+renderComments();
+
+document.getElementById('cfStars').addEventListener('click', e => {
+  const s = e.target.closest('.cf-star'); if(!s) return;
+  cfRating = +s.dataset.v;
+  document.querySelectorAll('.cf-star').forEach((el,i) => el.classList.toggle('on', i<cfRating));
+});
+
+function submitCF() {
+  const name = document.getElementById('cfName').value.trim();
+  const text = document.getElementById('cfText').value.trim();
+  if(!name||!text||!cfRating){ showToast('⚠ Completa los datos',false); return; }
+  const init = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  comments.unshift({name,init,rating:cfRating,date:'AHORA MISMO',text});
+  renderComments();
+  document.getElementById('cfName').value='';
+  document.getElementById('cfText').value='';
+  cfRating=0;
+  document.querySelectorAll('.cf-star').forEach(s=>s.classList.remove('on'));
+  showToast('✓ Veredicto registrado', true);
+}
+
+function showToast(msg,ok){
+  const t=document.getElementById('toast');
+  t.textContent=msg; 
+  t.style.background=ok?'var(--ice)':'var(--blood)';
+  t.style.color=ok?'var(--bg)':'var(--snow)';
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+const cur = document.getElementById('cur');
+document.addEventListener('mousemove', e => { cur.style.left=e.clientX+'px'; cur.style.top=e.clientY+'px'; });
+document.addEventListener('mouseover', e => {
+  cur.classList.toggle('h', !!e.target.closest('a, button, .cast-card, .cf-star, .vl-card'));
+});
+
+const hc = document.getElementById('snowCanvas');
+const hx = hc.getContext('2d');
+let W, H;
+function resize() { W = hc.width = hc.offsetWidth; H = hc.height = hc.offsetHeight; }
+resize(); window.addEventListener('resize', resize);
+
+const snowflakes = Array.from({length: 200}, () => ({
+  x: Math.random() * W,
+  y: Math.random() * H,
+  radius: Math.random() * 2 + 0.5,
+  density: Math.random() * 2,
+  sway: Math.random() * Math.PI * 2
+}));
+
+function drawSnow() {
+  hx.clearRect(0, 0, W, H);
+  hx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+  hx.beginPath();
+  
+  snowflakes.forEach((f, i) => {
+    f.y += Math.pow(f.density, 0.5) * 1;
+    f.sway += 0.02;
+    f.x += Math.sin(f.sway) * 0.5;
+    
+    if (f.y > H) {
+      f.x = Math.random() * W;
+      f.y = 0;
+    }
+    
+    hx.moveTo(f.x, f.y);
+    hx.arc(f.x, f.y, f.radius, 0, Math.PI * 2, true);
+  });
+  
+  hx.fill();
+  requestAnimationFrame(drawSnow);
+}
+drawSnow();
+
+const counters = document.querySelectorAll('.sv[data-t]');
+const obsC = new IntersectionObserver(entries => {
+  entries.forEach(en => {
+    if(!en.isIntersecting) return;
+    const el = en.target; const target = +el.dataset.t; let cur = 0;
+    const id = setInterval(() => {
+      cur = Math.min(cur + target/50, target);
+      let suffix = '';
+      if (target === 96) suffix = '%';
+      if (target === 35) suffix = 'M';
+      el.textContent = Math.round(cur) + suffix;
+      if(cur >= target) clearInterval(id);
+    }, 25);
+    obsC.unobserve(el);
+  });
+},{threshold:.5});
+counters.forEach(c => obsC.observe(c));
+</script>
+</body>
+</html>
